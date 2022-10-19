@@ -1,0 +1,3 @@
+[submodule "Boxx"]
+	path = Boxx
+	url = https://github.com/Maxboxx/Boxx.git

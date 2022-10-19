@@ -1,0 +1,8 @@
+Debug/
+Local/
+tests/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.log
+code/output/
