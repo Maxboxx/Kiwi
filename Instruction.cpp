@@ -7,7 +7,17 @@ using namespace Boxx;
 using namespace Kiwi;
 
 void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
-	data.frame->SetVarValue(var, expression->Evaluate(data));
+	if (type) {
+		data.frame->SetVarType(var, *type);
+	}
+
+	Ptr<Interpreter::Value> value = expression->Evaluate(data);
+
+	if (value) {
+		value = value->ConvertTo(Interpreter::Value::GetType(data.frame->GetVarType(var)));
+	}
+
+	data.frame->SetVarValue(var, value);
 }
 
 void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
@@ -30,6 +40,9 @@ void CallInstruction::BuildString(Boxx::StringBuilder& builder) {
 void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
 	if (Ptr<Interpreter::Value> value = this->value->Evaluate(data)) {
 		Console::Print(value->ToString());
+	}
+	else {
+		Console::Print("null");
 	}
 }
 

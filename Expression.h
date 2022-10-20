@@ -55,4 +55,16 @@ namespace Kiwi {
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
+
+	/// An add expression.
+	class AddExpression : public BinaryExpression {
+	public:
+		AddExpression(Ptr<Value> value1, Ptr<Value> value2) {
+			this->value1 = value1;
+			this->value2 = value2;
+		}
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
 }

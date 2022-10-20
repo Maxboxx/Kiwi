@@ -21,7 +21,14 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 	data.PushFrame();
 
 	for (int i = 0; i < args.Size(); i++) {
-		data.frame->SetVarValue(function->arguments[i].value2, argValues[i]);
+		Tuple<String, String> arg = function->arguments[i];
+		data.frame->SetVarType(arg.value2, arg.value1);
+		data.frame->SetVarValue(arg.value2, argValues[i]);
+	}
+
+	for (int i = 0; i < function->returnValues.Size(); i++) {
+		Tuple<String, String> value = function->returnValues[i];
+		data.frame->SetVarType(value.value2, value.value1);
 	}
 
 	function->block->Interpret(data);
@@ -44,4 +51,25 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	}
 
 	builder += ')';
+}
+
+
+Ptr<Interpreter::Value> AddExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Ptr<Interpreter::Value> a = value1->Evaluate(data); 
+	Ptr<Interpreter::Value> b = value2->Evaluate(data); 
+
+	if (Weak<Interpreter::Integer> int1 = a.As<Interpreter::Integer>()) {
+		if (Weak<Interpreter::Integer> int2 = b.As<Interpreter::Integer>()) {
+			return new Interpreter::Int64(int1->ToLong() + int2->ToLong());
+		}
+	}
+
+	return nullptr;
+}
+
+void AddExpression::BuildString(StringBuilder& builder) {
+	builder += "add ";
+	value1->BuildString(builder);
+	builder += ", ";
+	value2->BuildString(builder);
 }

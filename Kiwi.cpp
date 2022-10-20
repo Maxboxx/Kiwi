@@ -22,20 +22,23 @@ int main() {
 
 	Ptr<InstructionBlock> block = new InstructionBlock();
 
-	block->AddInstruction(new AssignInstruction("i32", "a", new Integer(34)));
+	block->AddInstruction(new AssignInstruction("i32", "a", new Integer(33)));
+	block->AddInstruction(new AssignInstruction("i32", "b", new Integer(22)));
 
 	Ptr<CallExpression> call = new CallExpression("f");
 	call->args.Add(new Variable("a"));
+	call->args.Add(new Variable("b"));
 
-	block->AddInstruction(new AssignInstruction("i32", "b", call));
-	block->AddInstruction(new DebugPrintInstruction(new Variable("b")));
+	block->AddInstruction(new AssignInstruction("i32", "c", call));
+	block->AddInstruction(new DebugPrintInstruction(new Variable("c")));
 
 	program->AddCodeBlock(block);
 
 	Ptr<Function> func = new Function("f");
-	func->AddArgument("i32", "i");
+	func->AddArgument("i32", "a");
+	func->AddArgument("i32", "b");
 	func->AddReturnValue("i32", "r");
-	func->AddInstruction(new AssignInstruction("r", new Variable("i")));
+	func->AddInstruction(new AssignInstruction("r", new AddExpression(new Variable("a"), new Variable("b"))));
 
 	program->AddFunction(func);
 
