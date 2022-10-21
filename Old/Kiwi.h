@@ -7,8 +7,10 @@
 #include "Boxx/Boxx/Pointer.h"
 #include "Boxx/Boxx/Logger.h"
 #include "Boxx/Boxx/StaticArray.h"
+#include "Boxx/Boxx/Either.h"
+#include "Boxx/Boxx/Regex.h"
 
-///N KiwiOld
+///N Kiwi
 
 namespace KiwiOld {
 	///B ArgumentType
@@ -21,7 +23,7 @@ namespace KiwiOld {
 		Number,
 		Memory,
 		Label,
-		Function
+		Name
 		///M
 	};
 
@@ -78,7 +80,14 @@ namespace KiwiOld {
 
 		Custom,
 		Label,
-		Function
+		Function,
+		Code,
+		Static,
+		Byte,
+		Short,
+		Int,
+		Long,
+		Zero
 		///M
 	};
 
@@ -198,8 +207,8 @@ namespace KiwiOld {
 		Boxx::Int offset;
 
 		///T Memory Pointer
-		/// The register to use as the memory pointer
-		Register reg = Register(RegisterType::Stack);
+		/// The register or memory label to use as the memory pointer
+		Boxx::Either<Register, Boxx::String> memptr = Register(RegisterType::Stack);
 
 		///T Constructors
 		///M
@@ -231,7 +240,7 @@ namespace KiwiOld {
 	}
 
 	inline bool MemoryLocation::operator==(const MemoryLocation& stack) const {
-		return reg == stack.reg && offset == stack.offset;
+		return memptr == stack.memptr && offset == stack.offset;
 	}
 
 	inline bool MemoryLocation::operator!=(const MemoryLocation& stack) const {
@@ -239,7 +248,7 @@ namespace KiwiOld {
 	}
 
 	inline bool MemoryLocation::operator<(const MemoryLocation& stack) const {
-		if (reg != stack.reg) return reg < stack.reg;
+		if (memptr != stack.memptr) return memptr < stack.memptr;
 		return offset < stack.offset;
 	}
 
@@ -294,7 +303,7 @@ namespace KiwiOld {
 	};
 
 	inline Argument::Argument() {
-	
+
 	}
 
 	inline Argument::Argument(const Boxx::Long number) {
@@ -323,13 +332,13 @@ namespace KiwiOld {
 	}
 
 	inline Argument::~Argument() {
-	
+
 	}
 
 	inline bool Argument::operator==(const Argument& arg) const {
 		if (type != arg.type) return false;
 
-		if (type == ArgumentType::Number || type == ArgumentType::Label || type == ArgumentType::Function) {
+		if (type == ArgumentType::Number || type == ArgumentType::Label || type == ArgumentType::Name) {
 			return number == arg.number;
 		}
 		else if (type == ArgumentType::Register) {
@@ -349,7 +358,7 @@ namespace KiwiOld {
 	inline bool Argument::operator<(const Argument& arg) const {
 		if (type != arg.type) return type < arg.type;
 
-		if (type == ArgumentType::Number || type == ArgumentType::Label || type == ArgumentType::Function) {
+		if (type == ArgumentType::Number || type == ArgumentType::Label || type == ArgumentType::Name) {
 			return number < arg.number;
 		}
 		else if (type == ArgumentType::Register) {
@@ -433,7 +442,7 @@ namespace KiwiOld {
 	};
 
 	inline Instruction::Instruction() {
-	
+
 	}
 
 	inline Instruction::Instruction(const InstructionType name, const Boxx::UByte size, const bool sign) {
@@ -473,7 +482,7 @@ namespace KiwiOld {
 	}
 
 	inline Instruction::~Instruction() {
-	
+
 	}
 
 	inline Instruction Instruction::Copy() const {
@@ -555,10 +564,16 @@ namespace KiwiOld {
 			name == InstructionType::Custom ||
 			name == InstructionType::Label ||
 			name == InstructionType::Function ||
+			name == InstructionType::Static ||
+			name == InstructionType::Code ||
 			name == InstructionType::Jmp ||
 			name == InstructionType::Call ||
 			name == InstructionType::Ret ||
-			name == InstructionType::Exit;
+			name == InstructionType::Byte ||
+			name == InstructionType::Short ||
+			name == InstructionType::Int ||
+			name == InstructionType::Long ||
+			name == InstructionType::Zero;
 	}
 
 	///B Converter
@@ -577,7 +592,7 @@ namespace KiwiOld {
 		}
 
 		~Converter() {
-		
+
 		}
 
 		///T Convert to file
@@ -625,12 +640,24 @@ namespace KiwiOld {
 				case InstructionType::Gt:   inst = "Gt  "; break;
 
 				case InstructionType::Label:    inst = instruction.instructionName; break;
-				case InstructionType::Function: inst = instruction.instructionName; break;
+				case InstructionType::Function: inst = "\nfunction " + ConvertName(instruction.instructionName, 8); break;
+				case InstructionType::Static:   inst = "\nstatic " + ConvertName(instruction.instructionName, 8); break;
+				case InstructionType::Code:     inst = "\ncode"; break;
+
+				case InstructionType::Byte:  inst = "byte";  break;
+				case InstructionType::Short: inst = "short"; break;
+				case InstructionType::Int:   inst = "int";   break;
+				case InstructionType::Long:  inst = "long";  break;
 
 				default: inst = "Undefined"; logger.Error("undefined instruction type"); break;
 			}
 
-			if (instruction.type != InstructionType::Label && instruction.type != InstructionType::Function) {
+			if (
+				instruction.type != InstructionType::Label && 
+				instruction.type != InstructionType::Function &&
+				instruction.type != InstructionType::Static &&
+				instruction.type != InstructionType::Code
+				) {
 				inst = "\t" + inst;
 			}
 			else {
@@ -690,7 +717,7 @@ namespace KiwiOld {
 				case ArgumentType::Register: return ConvertRegister(argument.reg, size);
 				case ArgumentType::Memory:   return ConvertMemoryLocation(argument.mem, size);
 				case ArgumentType::Number:   return ConvertNumber(argument.number, size);
-				case ArgumentType::Function: return ConvertFunction(argument.label, size);
+				case ArgumentType::Name:     return ConvertName(argument.label, size);
 				case ArgumentType::Label:    return ConvertLabel(argument.label, size);
 				default: logger.Error("undefined instruction argument"); return "undefined argument";
 			}
@@ -709,7 +736,12 @@ namespace KiwiOld {
 		///T Convert stack value
 		/// Converts a stack value to a string
 		virtual Boxx::String ConvertMemoryLocation(const MemoryLocation& stackValue, const Boxx::UByte size) {
-			return ConvertRegister(stackValue.reg, size) + "[" + Boxx::String::ToString((int)stackValue.offset) + "]";
+			if (stackValue.memptr.IsLeft()) {
+				return ConvertRegister(stackValue.memptr.GetLeft(), size) + "[" + Boxx::String::ToString((int)stackValue.offset) + "]";
+			}
+			else {
+				return ConvertName(stackValue.memptr.GetRight(), size) + "[" + Boxx::String::ToString((int)stackValue.offset) + "]";;
+			}
 		}
 
 		///T Convert number
@@ -720,8 +752,16 @@ namespace KiwiOld {
 
 		///T Convert function
 		/// Converts a function label to a string
-		virtual Boxx::String ConvertFunction(const Boxx::String& label, const Boxx::UByte size) {
-			return label;
+		virtual Boxx::String ConvertName(const Boxx::String& label, const Boxx::UByte size) {
+			static Boxx::Regex simplePattern = Boxx::Regex("^[_%a]%w*$");
+
+			if (simplePattern.Match(label)) {
+				// Check for reserved names 
+				return label;
+			}
+			else {
+				return "<" + label.Replace(">", "\\>") + ">";
+			}
 		}
 
 		///T Convert label
@@ -840,8 +880,23 @@ namespace KiwiOld {
 				}
 
 				case InstructionType::Label:
-				case InstructionType::Function: {
+				case InstructionType::Function:
+				case InstructionType::Static: {
 					return ValidateLabel(inst, logger, errInfo);
+				}
+
+				case InstructionType::Code: {
+					// TODO: fix
+					return true;
+				}
+
+				case InstructionType::Byte:
+				case InstructionType::Short:
+				case InstructionType::Int:
+				case InstructionType::Long:
+				case InstructionType::Zero: {
+					// TODO: Fix
+					return true;
 				}
 
 				case InstructionType::Call: {
@@ -919,7 +974,7 @@ namespace KiwiOld {
 			if (
 				instruction.arguments[0].type != ArgumentType::Memory &&
 				instruction.arguments[0].type != ArgumentType::Register
-			) {
+				) {
 				logger.Error(errInfo.InvalidArgs());
 				return false;
 			}
@@ -928,7 +983,7 @@ namespace KiwiOld {
 				instruction.arguments[1].type != ArgumentType::Memory &&
 				instruction.arguments[1].type != ArgumentType::Register &&
 				instruction.arguments[1].type != ArgumentType::Number
-			) {
+				) {
 				logger.Error(errInfo.InvalidArgs());
 				return false;
 			}
@@ -941,7 +996,7 @@ namespace KiwiOld {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -950,7 +1005,7 @@ namespace KiwiOld {
 					instruction.arguments[1].type != ArgumentType::Memory &&
 					instruction.arguments[1].type != ArgumentType::Register &&
 					instruction.arguments[1].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -962,7 +1017,7 @@ namespace KiwiOld {
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
 					instruction.arguments[0].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -971,7 +1026,7 @@ namespace KiwiOld {
 					instruction.arguments[1].type != ArgumentType::Memory &&
 					instruction.arguments[1].type != ArgumentType::Register &&
 					instruction.arguments[1].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -979,7 +1034,7 @@ namespace KiwiOld {
 				if (
 					instruction.arguments[2].type != ArgumentType::Memory &&
 					instruction.arguments[2].type != ArgumentType::Register
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1001,7 +1056,7 @@ namespace KiwiOld {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1013,7 +1068,7 @@ namespace KiwiOld {
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
 					instruction.arguments[0].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1021,7 +1076,7 @@ namespace KiwiOld {
 				if (
 					instruction.arguments[1].type != ArgumentType::Memory &&
 					instruction.arguments[1].type != ArgumentType::Register
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1062,7 +1117,7 @@ namespace KiwiOld {
 				return false;
 			}
 
-			if (instruction.arguments[0].type != ArgumentType::Function) {
+			if (instruction.arguments[0].type != ArgumentType::Name) {
 				logger.Error(errInfo.InvalidArgs());
 				return false;
 			}
@@ -1102,7 +1157,7 @@ namespace KiwiOld {
 				instruction.arguments[0].type != ArgumentType::Register &&
 				instruction.arguments[0].type != ArgumentType::Memory &&
 				instruction.arguments[0].type != ArgumentType::Number
-			) {
+				) {
 				logger.Error(errInfo.InvalidArgs());
 				return false;
 			}
@@ -1124,7 +1179,7 @@ namespace KiwiOld {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1133,7 +1188,7 @@ namespace KiwiOld {
 					instruction.arguments[1].type != ArgumentType::Memory &&
 					instruction.arguments[1].type != ArgumentType::Register &&
 					instruction.arguments[1].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1145,7 +1200,7 @@ namespace KiwiOld {
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
 					instruction.arguments[0].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1154,7 +1209,7 @@ namespace KiwiOld {
 					instruction.arguments[1].type != ArgumentType::Memory &&
 					instruction.arguments[1].type != ArgumentType::Register &&
 					instruction.arguments[1].type != ArgumentType::Number
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}
@@ -1163,7 +1218,7 @@ namespace KiwiOld {
 					instruction.arguments[2].type != ArgumentType::Memory &&
 					instruction.arguments[2].type != ArgumentType::Register &&
 					instruction.arguments[2].type != ArgumentType::Label
-				) {
+					) {
 					logger.Error(errInfo.InvalidArgs());
 					return false;
 				}

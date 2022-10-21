@@ -3,6 +3,7 @@
 #include "Boxx/Boxx/String.h"
 #include "Boxx/Boxx/List.h"
 #include "Boxx/Boxx/Math.h"
+#include "Boxx/Boxx/Map.h"
 
 #include "Kiwi.h"
 
@@ -32,6 +33,40 @@ namespace KiwiOld {
 		virtual void ConvertToFile(Boxx::FileWriter& file, const Boxx::List<Instruction>& instructions) {
 			Boxx::List<Instruction> converted = ConvertInstructions(instructions);
 
+			file.Write(".data\n");
+
+			Boxx::UInt i = 0;
+
+			for (; i < converted.Size(); i++) {
+				if (converted[i].type == InstructionType::Static) {
+					file.Write(ConvertInstruction(converted[i]));
+
+					for (i++; i < converted.Size(); i++) {
+						bool found = false;
+
+						switch (converted[i].type) {
+							case InstructionType::Byte:
+							case InstructionType::Short:
+							case InstructionType::Int:
+							case InstructionType::Long:
+							case InstructionType::Zero: {
+								found = true;
+								file.Write(ConvertInstruction(converted[i]));
+								break;
+							}
+						}
+
+						if (!found) {
+							i--;
+							break;
+						}
+					}
+				}
+				else {
+					break;
+				}
+			}
+
 			switch (syntax) {
 				case x86_64Syntax::Intel: {
 					file.Write(".code\nmain PROC\n");
@@ -39,13 +74,13 @@ namespace KiwiOld {
 				}
 
 				case x86_64Syntax::ATnT: {
-					file.Write(".data\n.text\n.global main\nmain:\n");
+					file.Write(".text\n.global main\nmain:\n");
 					break;
 				}
 			}
 
-			for (const Instruction& inst : converted) {
-				file.Write(ConvertInstruction(inst));
+			for (; i < converted.Size(); i++) {
+				file.Write(ConvertInstruction(converted[i]));
 			}
 
 			switch (syntax) {
@@ -102,7 +137,7 @@ namespace KiwiOld {
 		virtual Boxx::String ConvertInstruction(const Instruction& instruction) {
 			Boxx::String inst = instruction.instructionName;
 
-			if (instruction.type != InstructionType::Label && instruction.type != InstructionType::Function) {
+			if (instruction.type != InstructionType::Label && instruction.type != InstructionType::Function && instruction.type != InstructionType::Static) {
 				inst = "\t" + inst;
 			}
 			else {
@@ -296,19 +331,36 @@ namespace KiwiOld {
 					case 1: sizeStr = "BYTE PTR "; break;
 				}
 
+				Boxx::String regName = stackValue.memptr.IsLeft() ? GetRegisterName(stackValue.memptr.GetLeft(), 8) : stackValue.memptr.GetRight();
+
 				if (stackValue.offset > 0) {
-					return sizeStr + "[" + GetRegisterName(stackValue.reg, 8) + " + " + (Boxx::Int)stackValue.offset + "]";
+					return sizeStr + "[" + regName + " + " + (Boxx::Int)stackValue.offset + "]";
 				}
 				else if (stackValue.offset < 0) {
-					return sizeStr + "[" + GetRegisterName(stackValue.reg, 8) + " - " + abs((Boxx::Int)stackValue.offset) + "]";
+					return sizeStr + "[" + regName + " - " + abs((Boxx::Int)stackValue.offset) + "]";
 				}
 				else {
-					return sizeStr + "[" + GetRegisterName(stackValue.reg, 8) + "]";
+					return sizeStr + "[" + regName + "]";
 				}
 			}
 			else if (syntax == x86_64Syntax::ATnT) {
-				if (stackValue.offset != 0) return Boxx::String::ToString((Boxx::Int)stackValue.offset) + "(%" + GetRegisterName(stackValue.reg, 8) + ")";
-				return "(%" + GetRegisterName(stackValue.reg, 8) + ")";
+				Boxx::String regName = stackValue.memptr.IsLeft() ? GetRegisterName(stackValue.memptr.GetLeft(), 8) : stackValue.memptr.GetRight();
+
+				if (stackValue.memptr.IsLeft()) {
+					if (stackValue.offset != 0) return Boxx::String::ToString((Boxx::Int)stackValue.offset) + "(%" + regName + ")";
+					return "(%" + regName + ")";
+				}
+				else {
+					if (stackValue.offset > 0) {
+						return stackValue.memptr.GetRight() + "+" + Boxx::String::ToString((Boxx::Int)stackValue.offset) + "(%" + regName + ")";
+					}
+					else if (stackValue.offset < 0) {
+						return stackValue.memptr.GetRight() + Boxx::String::ToString((Boxx::Int)stackValue.offset) + "(%" + regName + ")";
+					}
+					else {
+						return stackValue.memptr.GetRight() + "(%" + regName + ")";
+					}
+				}
 			}
 
 			logger.Error("undefined stack");
@@ -332,6 +384,10 @@ namespace KiwiOld {
 
 			logger.Error("undefined syntax");
 			return "undefined syntax";
+		}
+
+		virtual Boxx::String ConvertName(const Boxx::String& label, const Boxx::UByte size) override {
+			return label;
 		}
 
 	private:
@@ -383,8 +439,22 @@ namespace KiwiOld {
 					}
 
 					case InstructionType::Label:
-					case InstructionType::Function: {
+					case InstructionType::Function:
+					case InstructionType::Static: {
 						converted.Add(inst.Copy());
+						break;
+					}
+
+					case InstructionType::Code: {
+						break;
+					}
+
+					case InstructionType::Byte:
+					case InstructionType::Short:
+					case InstructionType::Int:
+					case InstructionType::Long:
+					case InstructionType::Zero: {
+						ConvertData(converted, inst);
 						break;
 					}
 
@@ -431,6 +501,38 @@ namespace KiwiOld {
 						logger.Error("undefined instruction");
 						converted.Add(in);
 						break;
+					}
+				}
+			}
+
+			Boxx::Map<Boxx::String, Boxx::String> names;
+
+			for (Instruction& inst : converted) {
+				for (Argument& arg : inst.arguments) {
+					if (arg.type == ArgumentType::Name) {
+						if (!names.Contains(arg.label, arg.label)) {
+							const Boxx::String name = "N" + Boxx::String::ToString(names.Size());
+							names.Add(arg.label, name);
+							arg.label = name;
+						}
+					}
+					else if (arg.type == ArgumentType::Memory && arg.mem.memptr.IsRight()) {
+						Boxx::String name = arg.mem.memptr.GetRight();
+
+						if (!names.Contains(name, name)) {
+							name = "N" + Boxx::String::ToString(names.Size());
+							names.Add(arg.label, name);
+						}
+
+						arg.mem.memptr = name;
+					}
+				}
+
+				if (inst.type == InstructionType::Function || inst.type == InstructionType::Static) {
+					if (!names.Contains(inst.instructionName, inst.instructionName)) {
+						const Boxx::String name = "N" + Boxx::String::ToString(names.Size());
+						names.Add(inst.instructionName, name);
+						inst.instructionName = name;
 					}
 				}
 			}
@@ -497,7 +599,7 @@ namespace KiwiOld {
 				if (instruction.arguments[0].type == ArgumentType::Memory && instruction.arguments[1].type == ArgumentType::Memory) {
 					Instruction mov1 = mov.Copy();
 					Instruction mov2 = mov.Copy();
-				
+
 					mov2.signs[1] = mov2.signs[0];
 					mov2.sizes[1] = mov2.sizes[0];
 					mov2.instructionName = GetSizeName("mov", mov2.sizes[0]);
@@ -807,7 +909,7 @@ namespace KiwiOld {
 			bool firstA = minSize2 || (size < instruction.GetLargestSize() && (signedResult || size != 4)) || (
 				instruction.arguments[1].type == ArgumentType::Number && 
 				instruction.arguments[2].type != ArgumentType::Register
-			);
+				);
 
 			if (minSize2 && size < 2) size = 2;
 
@@ -1024,7 +1126,7 @@ namespace KiwiOld {
 		void ExtendAD(Boxx::List<Instruction>& instructions, const Boxx::UByte size, const bool sign) {
 			if (sign) {
 				Instruction extend = Instruction(InstructionType::Custom);
-			
+
 				switch (syntax) {
 					case x86_64Syntax::Intel: {
 						switch (size) {
@@ -1476,6 +1578,37 @@ namespace KiwiOld {
 			}
 		}
 
+		void ConvertData(Boxx::List<Instruction>& instructions, const Instruction& instruction) {
+			Instruction inst = instruction.Copy();
+
+			switch (inst.type) {
+				case InstructionType::Byte: {
+					inst.instructionName = "byte";
+					inst.arguments[0].number &= Boxx::Math::UByteMax();
+					break;
+				}
+
+				case InstructionType::Short: {
+					inst.instructionName = "word";
+					inst.arguments[0].number &= Boxx::Math::UShortMax();
+					break;
+				}
+
+				case InstructionType::Int: {
+					inst.instructionName = "dword";
+					inst.arguments[0].number &= Boxx::Math::UIntMax();
+					break;
+				}
+
+				case InstructionType::Long: {
+					inst.instructionName = "qword";
+					break;
+				}
+			}
+
+			instructions.Add(inst);
+		}
+
 		void UpdateMismatchCompInfo(const Instruction& instruction, Boxx::UInt& signedIndex, Boxx::UByte& size, bool& mismatch8) {
 			signedIndex = instruction.signs[0] ? 0 : 1;
 
@@ -1488,7 +1621,7 @@ namespace KiwiOld {
 			else if (
 				(instruction.signs[0] == false && instruction.sizes[0] == 8) ||
 				(instruction.signs[1] == false && instruction.sizes[1] == 8)
-			) {
+				) {
 				mismatch8 = true;
 			}
 		}
