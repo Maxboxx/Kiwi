@@ -18,7 +18,6 @@ namespace KiwiOld {
 				case ArgumentType::Memory:   return "S";
 				case ArgumentType::Number:   return "N";
 				case ArgumentType::Label:    return "L";
-				case ArgumentType::Function: return "F";
 				default: return "";
 			}
 		}
