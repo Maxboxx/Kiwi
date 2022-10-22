@@ -8,6 +8,8 @@
 #include "Boxx/Boxx/Tuple.h"
 #include "Boxx/Boxx/StringBuilder.h"
 
+///N Kiwi
+
 namespace Kiwi {
 	class InstructionBlock;
 	class Function;
@@ -15,7 +17,10 @@ namespace Kiwi {
 	/// The root node for kiwi programs.
 	class KiwiProgram : public Node {
 	public:
+		/// All code blocks.
 		Boxx::List<Ptr<InstructionBlock>> blocks;
+
+		/// All functions.
 		Boxx::Map<Boxx::String, Ptr<Function>> functions;
 
 		/// Adds a code block.
@@ -31,6 +36,7 @@ namespace Kiwi {
 	/// A block of instructions.
 	class InstructionBlock : public Node {
 	public:
+		/// All instructions.
 		Boxx::List<Ptr<Instruction>> instructions;
 
 		/// Adds an instruction to the block.
@@ -43,11 +49,16 @@ namespace Kiwi {
 	/// A kiwi function.
 	class Function : public Node {
 	public:
+		/// The function name.
 		Boxx::String name;
 
+		/// The return values.
 		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> returnValues;
+
+		/// The arguments.
 		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> arguments;
 
+		/// The function body.
 		Ptr<InstructionBlock> block = new InstructionBlock();
 
 		Function(const Boxx::String& name) {

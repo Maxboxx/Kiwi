@@ -3,9 +3,12 @@
 #include "Ptr.h"
 #include "Node.h"
 
+///N Kiwi
+
 namespace Kiwi {
 	class Value;
 
+	/// A kiwi expression.
 	class Expression : public Node {
 	public:
 		virtual void Interpret(Interpreter::InterpreterData& data) final override {

@@ -580,9 +580,6 @@ namespace KiwiOld {
 			arg.number = n;
 		}
 
-		///T Convert Mov instruction
-		/// Converts a move instruction with sign or zero extension if operands are different sizes
-		///W The upper half of an 8 byte reserved register has to be full of zeros before calling this function in order to zero extend from a 4 byte reserved register to the 8 byte version or an 8 byte memory location
 		void ConvertMov(Boxx::List<Instruction>& instructions, const Instruction& inst, const Register& tempReg = GetARegister()) {
 			Instruction instruction = inst.Copy();
 

@@ -10,7 +10,7 @@
 #include "Boxx/Boxx/Either.h"
 #include "Boxx/Boxx/Regex.h"
 
-///N Kiwi
+///N KiwiOld
 
 namespace KiwiOld {
 	///B ArgumentType

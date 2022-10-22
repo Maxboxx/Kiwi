@@ -7,6 +7,8 @@
 #include "Boxx/Boxx/Pointer.h"
 #include "Boxx/Boxx/Optional.h"
 
+///N Kiwi
+
 namespace Kiwi {
 	/// A kiwi instruction.
 	class Instruction : public Node {
@@ -82,6 +84,7 @@ namespace Kiwi {
 	/// A print instruction for debugging.
 	class DebugPrintInstruction : public DebugInstruction {
 	public:
+		/// The value to print.
 		Ptr<Value> value;
 
 		DebugPrintInstruction(Ptr<Value> value) {

@@ -6,7 +6,10 @@
 
 #include "Boxx/Boxx/StringBuilder.h"
 
+///N Kiwi
+
 namespace Kiwi {
+	/// The base for all Kiwi nodes.
 	class Node {
 	public:
 		virtual ~Node() {}
