@@ -26,7 +26,13 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		builder += ": ";
 	}
 
-	builder += var;
+	if (var.Size() > 0) {
+		builder += var;
+	}
+	else {
+		builder += "invalid variable";
+	}
+	
 	builder += " = ";
 
 	expression->BuildString(builder);

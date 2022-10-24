@@ -28,7 +28,12 @@ namespace Kiwi {
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
-			builder += name;
+			if (name.Size() > 0) {
+				builder += name;
+			}
+			else {
+				builder += "invalid variable";
+			}
 		}
 	};
 

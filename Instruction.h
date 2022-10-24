@@ -57,6 +57,18 @@ namespace Kiwi {
 			this->expression = expression;
 		}
 
+		AssignInstruction(Weak<Variable> var, Ptr<Expression> expression) {
+			this->type = nullptr;
+			this->var  = var ? var->name : Boxx::String("");
+			this->expression = expression;
+		}
+
+		AssignInstruction(const Boxx::String& type, Weak<Variable> var, Ptr<Expression> expression) {
+			this->type = type;
+			this->var  = var ? var->name : Boxx::String("");
+			this->expression = expression;
+		}
+
 		virtual void Interpret(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
