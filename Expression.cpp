@@ -12,21 +12,21 @@ using namespace Kiwi;
 Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& data) {
 	Weak<Function> function = data.program->functions[func];
 
-	Array<Ptr<Interpreter::Value>> argValues(args.Size());
+	Array<Ptr<Interpreter::Value>> argValues(args.Count());
 
-	for (int i = 0; i < args.Size(); i++) {
+	for (int i = 0; i < args.Count(); i++) {
 		argValues[i] = args[i]->Evaluate(data);
 	}
 
 	data.PushFrame();
 
-	for (int i = 0; i < args.Size(); i++) {
+	for (int i = 0; i < args.Count(); i++) {
 		Tuple<String, String> arg = function->arguments[i];
 		data.frame->SetVarType(arg.value2, arg.value1);
 		data.frame->SetVarValue(arg.value2, argValues[i]);
 	}
 
-	for (int i = 0; i < function->returnValues.Size(); i++) {
+	for (int i = 0; i < function->returnValues.Count(); i++) {
 		Tuple<String, String> value = function->returnValues[i];
 		data.frame->SetVarType(value.value2, value.value1);
 	}
@@ -45,7 +45,7 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += func;
 	builder += '(';
 
-	for (Int i = 0; i < args.Size(); i++) {
+	for (Int i = 0; i < args.Count(); i++) {
 		if (i > 0) builder += ", ";
 		args[i]->BuildString(builder);
 	}

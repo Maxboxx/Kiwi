@@ -26,7 +26,7 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		builder += ": ";
 	}
 
-	if (var.Size() > 0) {
+	if (var.Length() > 0) {
 		builder += var;
 	}
 	else {

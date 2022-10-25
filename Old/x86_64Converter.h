@@ -37,11 +37,11 @@ namespace KiwiOld {
 
 			Boxx::UInt i = 0;
 
-			for (; i < converted.Size(); i++) {
+			for (; i < converted.Count(); i++) {
 				if (converted[i].type == InstructionType::Static) {
 					file.Write(ConvertInstruction(converted[i]));
 
-					for (i++; i < converted.Size(); i++) {
+					for (i++; i < converted.Count(); i++) {
 						bool found = false;
 
 						switch (converted[i].type) {
@@ -79,7 +79,7 @@ namespace KiwiOld {
 				}
 			}
 
-			for (; i < converted.Size(); i++) {
+			for (; i < converted.Count(); i++) {
 				file.Write(ConvertInstruction(converted[i]));
 			}
 
@@ -146,7 +146,7 @@ namespace KiwiOld {
 
 			switch (syntax) {
 				case x86_64Syntax::Intel: {
-					for (Boxx::UInt i = 0; i < instruction.arguments.Size(); i++) {
+					for (Boxx::UInt i = 0; i < instruction.arguments.Count(); i++) {
 						if (i != 0) inst += ",";
 						inst += " " + ConvertArgument(instruction.arguments[i], instruction.sizes[i]);
 					}
@@ -155,8 +155,8 @@ namespace KiwiOld {
 				}
 
 				case x86_64Syntax::ATnT: {
-					for (Boxx::Int i = instruction.arguments.Size() - 1; i >= 0; i--) {
-						if (i < instruction.arguments.Size() - 1) inst += ",";
+					for (Boxx::Int i = instruction.arguments.Count() - 1; i >= 0; i--) {
+						if (i < instruction.arguments.Count() - 1) inst += ",";
 						inst += " " + ConvertArgument(instruction.arguments[i], instruction.sizes[i]);
 					}
 
@@ -393,7 +393,7 @@ namespace KiwiOld {
 	private:
 
 		Boxx::List<Instruction> ConvertInstructions(const Boxx::List<Instruction>& instructions) {
-			Boxx::List<Instruction> converted = Boxx::List<Instruction>(instructions.Size());
+			Boxx::List<Instruction> converted = Boxx::List<Instruction>(instructions.Count());
 
 			for (const Instruction& instruction : instructions) {
 				Instruction inst = instruction.Copy();
@@ -511,7 +511,7 @@ namespace KiwiOld {
 				for (Argument& arg : inst.arguments) {
 					if (arg.type == ArgumentType::Name) {
 						if (!names.Contains(arg.label, arg.label)) {
-							const Boxx::String name = "N" + Boxx::String::ToString(names.Size());
+							const Boxx::String name = "N" + Boxx::String::ToString(names.Count());
 							names.Add(arg.label, name);
 							arg.label = name;
 						}
@@ -520,7 +520,7 @@ namespace KiwiOld {
 						Boxx::String name = arg.mem.memptr.GetRight();
 
 						if (!names.Contains(name, name)) {
-							name = "N" + Boxx::String::ToString(names.Size());
+							name = "N" + Boxx::String::ToString(names.Count());
 							names.Add(arg.label, name);
 						}
 
@@ -530,7 +530,7 @@ namespace KiwiOld {
 
 				if (inst.type == InstructionType::Function || inst.type == InstructionType::Static) {
 					if (!names.Contains(inst.instructionName, inst.instructionName)) {
-						const Boxx::String name = "N" + Boxx::String::ToString(names.Size());
+						const Boxx::String name = "N" + Boxx::String::ToString(names.Count());
 						names.Add(inst.instructionName, name);
 						inst.instructionName = name;
 					}
@@ -590,7 +590,7 @@ namespace KiwiOld {
 
 			Boxx::List<Instruction> insts = ExtendMov(instruction, tempReg);
 
-			if (insts.Size() == 1) {
+			if (insts.Count() == 1) {
 				Instruction mov = insts[0];
 
 				if (instruction.arguments[0].type == ArgumentType::Memory && instruction.arguments[1].type == ArgumentType::Memory) {
@@ -809,7 +809,7 @@ namespace KiwiOld {
 				case InstructionType::ShR:  info.instName = instruction.signs[0] ? "sar" : "shr"; break;
 			}
 
-			if (instruction.arguments.Size() == 3) {
+			if (instruction.arguments.Count() == 3) {
 				ConvertBinaryThree(instructions, instruction, info);
 			}
 			else {
@@ -1291,13 +1291,13 @@ namespace KiwiOld {
 				case InstructionType::Not: instName = "not"; break;
 			}
 
-			if (instruction.arguments.Size() == 1) {
+			if (instruction.arguments.Count() == 1) {
 				Instruction inst = instruction.Copy();
 				inst.type = InstructionType::Custom;
 				inst.instructionName = GetSizeName(instName, instruction.sizes[0]);
 				instructions.Add(inst);
 			}
-			else if (instruction.arguments.Size() == 2) {
+			else if (instruction.arguments.Count() == 2) {
 				Argument arg = GetARegister();
 
 				if (instruction.arguments[1].type == ArgumentType::Register) {
@@ -1445,7 +1445,7 @@ namespace KiwiOld {
 			set.signs[0] = false;
 			instructions.Add(set);
 
-			Boxx::UInt outputIndex = inst.arguments.Size() == 2 ? 0 : 2;
+			Boxx::UInt outputIndex = inst.arguments.Count() == 2 ? 0 : 2;
 
 			if (inst.sizes[outputIndex] > 1 && inst.arguments[outputIndex].type == ArgumentType::Memory) {
 				CompSetMemory(instructions, inst, outputIndex);
@@ -1536,7 +1536,7 @@ namespace KiwiOld {
 
 			Boxx::UByte size = Boxx::Math::Max(instruction.sizes[0], instruction.sizes[1]);
 			bool sign = mismatch || instruction.signs[0];
-			bool isJump = inst.arguments.Size() == 3 && inst.arguments[2].type == ArgumentType::Label;
+			bool isJump = inst.arguments.Count() == 3 && inst.arguments[2].type == ArgumentType::Label;
 
 			if (mismatch) {
 				UpdateMismatchCompInfo(instruction, signedIndex, size, mismatch8);

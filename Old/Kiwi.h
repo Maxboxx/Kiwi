@@ -491,7 +491,7 @@ namespace KiwiOld {
 		inst.signs = Boxx::StaticArray<bool, 3>();
 		inst.arguments = Boxx::List<Argument>();
 
-		for (Boxx::UInt i = 0; i < inst.sizes.Size(); i++) {
+		for (Boxx::UInt i = 0; i < inst.sizes.Length(); i++) {
 			inst.sizes[i] = this->sizes[i];
 			inst.signs[i] = this->signs[i];
 		}
@@ -516,13 +516,13 @@ namespace KiwiOld {
 
 	inline bool Instruction::operator==(const Instruction& inst) const {
 		if (type != inst.type) return false;
-		if (arguments.Size() != inst.arguments.Size()) return false;
+		if (arguments.Count() != inst.arguments.Count()) return false;
 
-		for (Boxx::UInt i = 0; i < arguments.Size(); i++) {
+		for (Boxx::UInt i = 0; i < arguments.Count(); i++) {
 			if (arguments[i] != inst.arguments[i]) return false;
 		}
 
-		for (Boxx::UInt i = 0; i < sizes.Size(); i++) {
+		for (Boxx::UInt i = 0; i < sizes.Length(); i++) {
 			if (sizes[i] != inst.sizes[i]) return false;
 			if (signs[i] != inst.signs[i]) return false;
 		}
@@ -669,7 +669,7 @@ namespace KiwiOld {
 				bool sign = instruction.signs[0];
 				bool eq = true;
 
-				for (Boxx::UInt i = 1; i < instruction.arguments.Size(); i++) {
+				for (Boxx::UInt i = 1; i < instruction.arguments.Count(); i++) {
 					if (instruction.arguments[i].type == ArgumentType::Label) break;
 
 					if (instruction.sizes[i] != size) {
@@ -687,7 +687,7 @@ namespace KiwiOld {
 					inst += " " + Boxx::String::ToString((Boxx::UInt)size) + (sign ? "" : "U");
 				}
 				else {
-					for (Boxx::UInt i = 0; i < instruction.arguments.Size(); i++) {
+					for (Boxx::UInt i = 0; i < instruction.arguments.Count(); i++) {
 						if (instruction.arguments[i].type == ArgumentType::Label) break;
 						if (i > 0) inst += ",";
 						inst += " " + Boxx::String::ToString((Boxx::UInt)instruction.sizes[i]) + (instruction.signs[i] ? "" : "U");
@@ -699,7 +699,7 @@ namespace KiwiOld {
 				}
 			}
 
-			for (Boxx::UInt i = 0; i < instruction.arguments.Size(); i++) {
+			for (Boxx::UInt i = 0; i < instruction.arguments.Count(); i++) {
 				if (i > 0) {
 					inst += ",";
 				}
@@ -943,7 +943,7 @@ namespace KiwiOld {
 		static bool Validate(const Boxx::List<Instruction>& instructions, Boxx::Logger& logger, const ErrorInfo& errInfo = ErrorInfo()) {
 			bool valid = true;
 
-			for (Boxx::UInt i = 0; i < instructions.Size(); i++) {
+			for (Boxx::UInt i = 0; i < instructions.Count(); i++) {
 				ErrorInfo err = errInfo;
 				err.line = i;
 
@@ -957,11 +957,11 @@ namespace KiwiOld {
 
 	private:
 		static bool ValidateMov(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() < 2) {
+			if (instruction.arguments.Count() < 2) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 2) {
+			else if (instruction.arguments.Count() > 2) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -992,7 +992,7 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateBinOp(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() == 2) {
+			if (instruction.arguments.Count() == 2) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
@@ -1012,7 +1012,7 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() == 3) {
+			else if (instruction.arguments.Count() == 3) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
@@ -1041,18 +1041,18 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() < 2) {
+			else if (instruction.arguments.Count() < 2) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 3) {
+			else if (instruction.arguments.Count() > 3) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
 		}
 
 		static bool ValidateUnaryOp(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() == 1) {
+			if (instruction.arguments.Count() == 1) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
@@ -1063,7 +1063,7 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() == 2) {
+			else if (instruction.arguments.Count() == 2) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
@@ -1083,11 +1083,11 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() < 1) {
+			else if (instruction.arguments.Count() < 1) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 2) {
+			else if (instruction.arguments.Count() > 2) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1099,7 +1099,7 @@ namespace KiwiOld {
 				return false;
 			}
 
-			if (instruction.instructionName.Size() == 0) {
+			if (instruction.instructionName.IsEmpty()) {
 				logger.Error(errInfo.CreateMessage("invalid name"));
 				return false;
 			}
@@ -1108,11 +1108,11 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateCall(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() < 1) {
+			if (instruction.arguments.Count() < 1) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 1) {
+			else if (instruction.arguments.Count() > 1) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1126,11 +1126,11 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateJmp(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() < 1) {
+			if (instruction.arguments.Count() < 1) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 1) {
+			else if (instruction.arguments.Count() > 1) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1144,11 +1144,11 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateNumArg(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() < 1) {
+			if (instruction.arguments.Count() < 1) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 1) {
+			else if (instruction.arguments.Count() > 1) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1166,7 +1166,7 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateNoArg(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() > 0) {
+			if (instruction.arguments.Count() > 0) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1175,7 +1175,7 @@ namespace KiwiOld {
 		}
 
 		static bool ValidateComp(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
-			if (instruction.arguments.Size() == 2) {
+			if (instruction.arguments.Count() == 2) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register
@@ -1195,7 +1195,7 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() == 3) {
+			else if (instruction.arguments.Count() == 3) {
 				if (
 					instruction.arguments[0].type != ArgumentType::Memory &&
 					instruction.arguments[0].type != ArgumentType::Register &&
@@ -1225,11 +1225,11 @@ namespace KiwiOld {
 
 				return true;
 			}
-			else if (instruction.arguments.Size() < 2) {
+			else if (instruction.arguments.Count() < 2) {
 				logger.Error(errInfo.FewArgs());
 				return false;
 			}
-			else if (instruction.arguments.Size() > 3) {
+			else if (instruction.arguments.Count() > 3) {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
@@ -1238,7 +1238,7 @@ namespace KiwiOld {
 		static bool ValidatePushPop(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
 			const bool isPush = instruction.type == InstructionType::Push;
 
-			if (instruction.arguments.Size() > 0) {
+			if (instruction.arguments.Count() > 0) {
 				logger.Warning(errInfo.CreateMessage(Boxx::String(isPush ? "Push" : "Pop") + " instruction might not work"));
 				return false;
 			}

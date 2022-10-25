@@ -72,10 +72,10 @@ void Function::Interpret(Interpreter::InterpreterData& data) {
 void Function::BuildString(StringBuilder& builder) {
 	builder += "function ";
 
-	if (returnValues.Size() > 0) {
+	if (returnValues.Count() > 0) {
 		bool singleType = true;
 
-		for (Int i = 1; i < returnValues.Size(); i++) {
+		for (Int i = 1; i < returnValues.Count(); i++) {
 			if (returnValues[0].value1 != returnValues[i].value1) {
 				singleType = false;
 				break;
@@ -85,14 +85,14 @@ void Function::BuildString(StringBuilder& builder) {
 		if (singleType) {
 			builder += returnValues[0].value1;
 		}
-		else for (Int i = 0; i < returnValues.Size(); i++) {
+		else for (Int i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
 			builder += returnValues[i].value1;
 		}
 
 		builder += ": ";
 
-		for (Int i = 0; i < returnValues.Size(); i++) {
+		for (Int i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
 			builder += returnValues[i].value2;
 		}
@@ -103,7 +103,7 @@ void Function::BuildString(StringBuilder& builder) {
 	builder += name;
 	builder += '(';
 
-	for (Int i = 0; i < arguments.Size(); i++) {
+	for (Int i = 0; i < arguments.Count(); i++) {
 		if (i > 0) builder += ", ";
 		builder += arguments[i].value1;
 		builder += ": ";
