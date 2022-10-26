@@ -5,6 +5,7 @@
 #include "../Boxx/Boxx/String.h"
 #include "../Boxx/Boxx/Map.h"
 #include "../Boxx/Boxx/Stack.h"
+#include "../Boxx/Boxx/Error.h"
 
 ///N Kiwi::Interpreter
 
@@ -12,19 +13,6 @@ namespace Kiwi {
 	class KiwiProgram;
 
 	namespace Interpreter {
-		/// Enum for all the value types.
-		enum class ValueType : Boxx::UByte {
-			None,
-			Int8,
-			UInt8,
-			Int16,
-			UInt16,
-			Int32,
-			UInt32,
-			Int64,
-			UInt64
-		};
-		
 		/// Base for interpreter values.
 		class Value {
 		public:
@@ -34,24 +22,13 @@ namespace Kiwi {
 			virtual Ptr<Value> Copy() const = 0;
 
 			/// Converts the value to the specified type.
-			virtual Ptr<Value> ConvertTo(const ValueType type) const = 0;
+			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const = 0;
+
+			/// Gets the type of the value.
+			virtual Boxx::String GetType() const = 0;
 
 			/// Converts the value to a string.
 			virtual Boxx::String ToString() const = 0;
-
-			/// Gets the type with the specified name.
-			static ValueType GetType(const Boxx::String& type) {
-				if (type == "i8")  return ValueType::Int8;
-				if (type == "u8")  return ValueType::UInt8;
-				if (type == "i16") return ValueType::Int16;
-				if (type == "u16") return ValueType::UInt16;
-				if (type == "i32") return ValueType::Int32;
-				if (type == "u32") return ValueType::UInt32;
-				if (type == "i64") return ValueType::Int64;
-				if (type == "u64") return ValueType::UInt64;
-
-				return ValueType::None;
-			}
 		};
 
 		/// A stack frame.
@@ -163,19 +140,30 @@ namespace Kiwi {
 				return value;
 			}
 
-			virtual Ptr<Value> ConvertTo(const ValueType type) const override {
-				switch (type) {
-					case ValueType::Int8:   return new Int<Boxx::Byte>(value);
-					case ValueType::UInt8:  return new Int<Boxx::UByte>(value);
-					case ValueType::Int16:  return new Int<Boxx::Short>(value);
-					case ValueType::UInt16: return new Int<Boxx::UShort>(value);
-					case ValueType::Int32:  return new Int<Boxx::Int>(value);
-					case ValueType::UInt32: return new Int<Boxx::UInt>(value);
-					case ValueType::Int64:  return new Int<Boxx::Long>(value);
-					case ValueType::UInt64: return new Int<Boxx::ULong>(value);
+			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const override {
+				if (type == "i8")  return new Int<Boxx::Byte>(value);
+				if (type == "u8")  return new Int<Boxx::UByte>(value);
+				if (type == "i16") return new Int<Boxx::Short>(value);
+				if (type == "u16") return new Int<Boxx::UShort>(value);
+				if (type == "i32") return new Int<Boxx::Int>(value);
+				if (type == "u32") return new Int<Boxx::UInt>(value);
+				if (type == "i64") return new Int<Boxx::Long>(value);
+				if (type == "u64") return new Int<Boxx::ULong>(value);
 
-					default: return nullptr;
-				}
+				return nullptr;
+			}
+
+			virtual Boxx::String GetType() const override {
+				if constexpr (std::is_same<T, Boxx::Byte>::value)   return "i8";
+				if constexpr (std::is_same<T, Boxx::UByte>::value)  return "u8";
+				if constexpr (std::is_same<T, Boxx::Short>::value)  return "i16";
+				if constexpr (std::is_same<T, Boxx::UShort>::value) return "u16";
+				if constexpr (std::is_same<T, Boxx::Int>::value)    return "i32";
+				if constexpr (std::is_same<T, Boxx::UInt>::value)   return "u32";
+				if constexpr (std::is_same<T, Boxx::Long>::value)   return "i64";
+				if constexpr (std::is_same<T, Boxx::ULong>::value)  return "u64";
+
+				return "";
 			}
 		};
 
@@ -202,5 +190,16 @@ namespace Kiwi {
 
 		/// A 64-bit unsigned integer value.
 		typedef Int<Boxx::ULong>  UInt64;
+
+		/// Error for interpreting.
+		class KiwiInterpretError : public Boxx::Error {
+		public:
+			KiwiInterpretError() : Boxx::Error() {}
+			KiwiInterpretError(const char* const msg) : Boxx::Error(msg) {}
+
+			virtual Boxx::String Name() const override {
+				return "KiwiInterpretError";
+			}
+		};
 	}
 }

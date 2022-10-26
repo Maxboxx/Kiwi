@@ -14,7 +14,13 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Ptr<Interpreter::Value> value = expression->Evaluate(data);
 
 	if (value) {
-		value = value->ConvertTo(Interpreter::Value::GetType(data.frame->GetVarType(var)));
+		String valueType = value->GetType();
+
+		value = value->ConvertTo(data.frame->GetVarType(var));
+		
+		if (!value) {
+			throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType + "' to '" + data.frame->GetVarType(var) + "'");
+		}
 	}
 
 	data.frame->SetVarValue(var, value);
