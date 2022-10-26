@@ -1,3 +1,4 @@
+#pragma once
 
 #include "Ptr.h"
 #include "Node.h"

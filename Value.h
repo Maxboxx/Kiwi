@@ -2,7 +2,7 @@
 
 #include "Boxx/Boxx/String.h"
 
-#include "Expression.h"
+#include "Expressions.h"
 
 ///N Kiwi
 
@@ -28,12 +28,7 @@ namespace Kiwi {
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
-			if (name.Length() > 0) {
-				builder += name;
-			}
-			else {
-				builder += "invalid variable";
-			}
+			builder += Name::ToKiwi(name);
 		}
 	};
 

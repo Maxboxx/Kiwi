@@ -26,16 +26,16 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		builder += ": ";
 	}
 
-	if (var.Length() > 0) {
-		builder += var;
-	}
-	else {
-		builder += "invalid variable";
-	}
+	builder += Name::ToKiwi(var);
 	
 	builder += " = ";
 
-	expression->BuildString(builder);
+	if (expression) {
+		expression->BuildString(builder);
+	}
+	else {
+		builder += "invalid expression";
+	}
 }
 
 
