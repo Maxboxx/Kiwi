@@ -59,15 +59,254 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
-	/// An add expression.
-	class AddExpression : public BinaryExpression {
+	/// A unary expression for numbers.
+	class UnaryNumberExpression : public UnaryExpression {
 	public:
-		AddExpression(Ptr<Value> value1, Ptr<Value> value2) {
+		UnaryNumberExpression(Boxx::String instructionName, Ptr<Value> value) {
+			this->instructionName = instructionName;
+			this->value = value;
+		}
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+
+	protected:
+		Boxx::String instructionName;
+
+		virtual Boxx::Long Evaluate(Boxx::Long a) = 0;
+	};
+
+	/// A binary expression for numbers.
+	class BinaryNumberExpression : public BinaryExpression {
+	public:
+		BinaryNumberExpression(Boxx::String instructionName, Ptr<Value> value1, Ptr<Value> value2) {
+			this->instructionName = instructionName;
 			this->value1 = value1;
 			this->value2 = value2;
 		}
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
+
+	protected:
+		Boxx::String instructionName;
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) = 0;
+	};
+
+	/// An negation expression.
+	class NegExpression : public UnaryNumberExpression {
+	public:
+		NegExpression(Ptr<Value> value) : UnaryNumberExpression("neg", value) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a) override {
+			return -a;
+		}
+	};
+
+	/// A bitwise not expression.
+	class BitNotExpression : public UnaryNumberExpression {
+	public:
+		BitNotExpression(Ptr<Value> value) : UnaryNumberExpression("not", value) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a) override {
+			return ~a;
+		}
+	};
+
+	/// An add expression.
+	class AddExpression : public BinaryNumberExpression {
+	public:
+		AddExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("add", value1, value2) {
+			
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a + b;
+		}
+	};
+
+	/// A subtract expression.
+	class SubExpression : public BinaryNumberExpression {
+	public:
+		SubExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("sub", value1, value2) {
+			
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a - b;
+		}
+	};
+
+	/// A multiplication expression.
+	class MulExpression : public BinaryNumberExpression {
+	public:
+		MulExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("mul", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a * b;
+		}
+	};
+
+	/// A division expression.
+	class DivExpression : public BinaryNumberExpression {
+	public:
+		DivExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("div", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a / b;
+		}
+	};
+
+	/// A modulus expression.
+	class ModExpression : public BinaryNumberExpression {
+	public:
+		ModExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("mod", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a % b;
+		}
+	};
+
+	/// A bitwise or expression.
+	class BitOrExpression : public BinaryNumberExpression {
+	public:
+		BitOrExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("or", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a | b;
+		}
+	};
+
+	/// A bitwise and expression.
+	class BitAndExpression : public BinaryNumberExpression {
+	public:
+		BitAndExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("and", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a & b;
+		}
+	};
+
+	/// A bitwise xor expression.
+	class BitXorExpression : public BinaryNumberExpression {
+	public:
+		BitXorExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("xor", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a ^ b;
+		}
+	};
+
+	/// A left shift expression.
+	class LeftShiftExpression : public BinaryNumberExpression {
+	public:
+		LeftShiftExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("shl", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a << b;
+		}
+	};
+
+	/// A right shift expression.
+	class RightShiftExpression : public BinaryNumberExpression {
+	public:
+		RightShiftExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("shr", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a >> b;
+		}
+	};
+
+	/// An equals expression.
+	class EqualExpression : public BinaryNumberExpression {
+	public:
+		EqualExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("eq", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a == b;
+		}
+	};
+
+	/// A not equals expression.
+	class NotEqualExpression : public BinaryNumberExpression {
+	public:
+		NotEqualExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("ne", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a != b;
+		}
+	};
+
+	/// A less than expression.
+	class LessExpression : public BinaryNumberExpression {
+	public:
+		LessExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("lt", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a < b;
+		}
+	};
+
+	/// A greater than expression.
+	class GreaterExpression : public BinaryNumberExpression {
+	public:
+		GreaterExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("gt", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a > b;
+		}
+	};
+
+	/// A less than or equal expression.
+	class LessEqualExpression : public BinaryNumberExpression {
+	public:
+		LessEqualExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("le", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a <= b;
+		}
+	};
+
+	/// A greater than or equal expression.
+	class GreaterEqualExpression : public BinaryNumberExpression {
+	public:
+		GreaterEqualExpression(Ptr<Value> value1, Ptr<Value> value2) : BinaryNumberExpression("ge", value1, value2) {
+
+		}
+
+		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			return a >= b;
+		}
 	};
 }

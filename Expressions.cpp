@@ -53,22 +53,38 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += ')';
 }
 
+Ptr<Interpreter::Value> UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Ptr<Interpreter::Value> a = value->Evaluate(data); 
 
-Ptr<Interpreter::Value> AddExpression::Evaluate(Interpreter::InterpreterData& data) {
+	if (Weak<Interpreter::Integer> int1 = a.As<Interpreter::Integer>()) {
+		return new Interpreter::Int64(Evaluate(int1->ToLong()));
+	}
+
+	return nullptr;
+}
+
+void UnaryNumberExpression::BuildString(StringBuilder& builder) {
+	builder += instructionName;
+	builder += " ";
+	value->BuildString(builder);
+}
+
+Ptr<Interpreter::Value> BinaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
 	Ptr<Interpreter::Value> a = value1->Evaluate(data); 
 	Ptr<Interpreter::Value> b = value2->Evaluate(data); 
 
 	if (Weak<Interpreter::Integer> int1 = a.As<Interpreter::Integer>()) {
 		if (Weak<Interpreter::Integer> int2 = b.As<Interpreter::Integer>()) {
-			return new Interpreter::Int64(int1->ToLong() + int2->ToLong());
+			return new Interpreter::Int64(Evaluate(int1->ToLong(), int2->ToLong()));
 		}
 	}
 
 	return nullptr;
 }
 
-void AddExpression::BuildString(StringBuilder& builder) {
-	builder += "add ";
+void BinaryNumberExpression::BuildString(StringBuilder& builder) {
+	builder += instructionName;
+	builder += " ";
 	value1->BuildString(builder);
 	builder += ", ";
 	value2->BuildString(builder);

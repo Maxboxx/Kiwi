@@ -11,6 +11,10 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 		data.frame->SetVarType(var, *type);
 	}
 
+	if (!expression) {
+		throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var + "'");
+	}
+
 	Ptr<Interpreter::Value> value = expression->Evaluate(data);
 
 	if (value) {
@@ -60,6 +64,12 @@ void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 void DebugPrintInstruction::BuildString(StringBuilder& builder) {
 	builder += "_print ";
-	value->BuildString(builder);
+
+	if (value) {
+		value->BuildString(builder);
+	}
+	else {
+		builder += "invalid value";
+	}
 }
 
