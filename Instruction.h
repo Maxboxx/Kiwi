@@ -87,6 +87,15 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	/// A return instruction.
+	class ReturnInstruction : public Instruction {
+	public:
+		ReturnInstruction() {}
+
+		virtual void BuildString(Boxx::StringBuilder& builder) override {
+			builder += "ret";
+		}
+	};
 
 	/// Base for instructions used for debugging.
 	class DebugInstruction : public Instruction {

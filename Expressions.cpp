@@ -42,7 +42,7 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 
 void CallExpression::BuildString(StringBuilder& builder) {
 	builder += "call ";
-	builder += func;
+	builder += Name::ToKiwi(func);
 	builder += '(';
 
 	for (Int i = 0; i < args.Count(); i++) {

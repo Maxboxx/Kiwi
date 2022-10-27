@@ -83,31 +83,31 @@ void Function::BuildString(StringBuilder& builder) {
 		}
 
 		if (singleType) {
-			builder += returnValues[0].value1;
+			builder += Name::ToKiwi(returnValues[0].value1);
 		}
 		else for (Int i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
-			builder += returnValues[i].value1;
+			builder += Name::ToKiwi(returnValues[i].value1);
 		}
 
 		builder += ": ";
 
 		for (Int i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
-			builder += returnValues[i].value2;
+			builder += Name::ToKiwi(returnValues[i].value2);
 		}
 
 		builder += ' ';
 	}
 
-	builder += name;
+	builder += Name::ToKiwi(name);
 	builder += '(';
 
 	for (Int i = 0; i < arguments.Count(); i++) {
 		if (i > 0) builder += ", ";
-		builder += arguments[i].value1;
+		builder += Name::ToKiwi(arguments[i].value1);
 		builder += ": ";
-		builder += arguments[i].value2;
+		builder += Name::ToKiwi(arguments[i].value2);
 	}
 
 	builder += "):\n";

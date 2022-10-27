@@ -48,7 +48,7 @@ namespace Kiwi {
 		/// The function to call.
 		Boxx::String func;
 
-		/// The functin arguments.
+		/// The function arguments.
 		Boxx::List<Ptr<Value>> args;
 
 		CallExpression(const Boxx::String& func) {
