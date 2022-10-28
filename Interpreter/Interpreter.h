@@ -191,6 +191,60 @@ namespace Kiwi {
 		/// A 64-bit unsigned integer value.
 		typedef Int<Boxx::ULong>  UInt64;
 
+		/// An struct value.
+		class StructValue : public Value {
+		public:
+			/// The current kiwi program.
+			Weak<KiwiProgram> program;
+
+			/// The type of the struct value.
+			Boxx::String type;
+
+			/// The struct data.
+			Boxx::Map<Boxx::String, Ptr<Value>> data;
+
+			StructValue(const Boxx::String& type, Weak<KiwiProgram> program) {
+				this->program = program;
+				this->type = type;
+			}
+
+			/// Sets the specified struct value.
+			void SetValue(const Boxx::String& var, Ptr<Value> value);
+
+			/// Gets the specified struct value.
+			Weak<Value> GetValue(const Boxx::String& var) const {
+				if (data.Contains(var)) {
+					return data[var];
+				}
+
+				return nullptr;
+			}
+
+			virtual Ptr<Value> Copy() const {
+				Ptr<StructValue> value = new StructValue(type, program);
+
+				for (const Boxx::Pair<Boxx::String, Ptr<Value>>& pair : data) {
+					value->SetValue(pair.key, pair.value->Copy());
+				}
+
+				return value;
+			}
+
+			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const {
+				if (this->type == type) {
+					return Copy();
+				}
+
+				return nullptr;
+			}
+
+			virtual Boxx::String GetType() const {
+				return type;
+			}
+
+			virtual Boxx::String ToString() const;
+		};
+
 		/// Error for interpreting.
 		class KiwiInterpretError : public Boxx::Error {
 		public:

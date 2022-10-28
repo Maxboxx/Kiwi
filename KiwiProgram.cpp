@@ -8,6 +8,10 @@ void KiwiProgram::AddCodeBlock(Ptr<InstructionBlock> block) {
 	blocks.Add(block);
 }
 
+void KiwiProgram::AddStruct(Ptr<Struct> struct_) {
+	structs.Add(struct_->name, struct_);
+}
+
 void KiwiProgram::AddFunction(Ptr<Function> function) {
 	functions.Add(function->name, function);
 }
@@ -24,6 +28,10 @@ void KiwiProgram::BuildString(StringBuilder& builder) {
 	for (Weak<InstructionBlock> block : blocks) {
 		builder += "code:\n";
 		block->BuildString(builder);
+	}
+
+	for (const Pair<String, Ptr<Struct>>& struct_ : structs) {
+		struct_.value->BuildString(builder);
 	}
 
 	for (const Pair<String, Ptr<Function>>& func : functions) {
@@ -113,4 +121,22 @@ void Function::BuildString(StringBuilder& builder) {
 	builder += "):\n";
 
 	block->BuildString(builder);
+}
+
+void Struct::AddVariable(const String& type, const String& var) {
+	vars.Add(Tuple<>::Create(type, var));
+}
+
+void Struct::BuildString(StringBuilder& builder) {
+	builder += "struct ";
+	builder += Name::ToKiwi(name);
+	builder += ":\n";
+
+	for (const Tuple<String, String>& var : vars) {
+		builder += '\t';
+		builder += Name::ToKiwi(var.value1);
+		builder += ": ";
+		builder += Name::ToKiwi(var.value2);
+		builder += '\n';
+	}
 }

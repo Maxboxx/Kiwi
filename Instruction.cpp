@@ -7,27 +7,44 @@ using namespace Boxx;
 using namespace Kiwi;
 
 void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
-	if (type) {
-		data.frame->SetVarType(var, *type);
+	Weak<SubVariable> subVar = var.As<SubVariable>();
+
+	if (type && !subVar) {
+		data.frame->SetVarType(var->name, *type);
 	}
 
 	if (!expression) {
-		throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var + "'");
+		if (!type) {
+			throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var->name + "'");
+		}
+		else {
+			data.frame->SetVarValue(var->name, new Interpreter::StructValue(*type, data.program));
+			return;
+		}
 	}
 
 	Ptr<Interpreter::Value> value = expression->Evaluate(data);
 
-	if (value) {
-		String valueType = value->GetType();
+	if (subVar) {
+		Weak<Interpreter::StructValue> struct_ = subVar->var->GetStructRef(data);
 
-		value = value->ConvertTo(data.frame->GetVarType(var));
-		
-		if (!value) {
-			throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType + "' to '" + data.frame->GetVarType(var) + "'");
+		if (struct_) {
+			struct_->SetValue(subVar->name, value);
 		}
 	}
+	else {
+		if (value) {
+			String valueType = value->GetType();
 
-	data.frame->SetVarValue(var, value);
+			value = value->ConvertTo(data.frame->GetVarType(var->name));
+
+			if (!value) {
+				throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType + "' to '" + data.frame->GetVarType(var->name) + "'");
+			}
+		}
+
+		data.frame->SetVarValue(var->name, value);
+	}
 }
 
 void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
@@ -36,8 +53,15 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		builder += ": ";
 	}
 
-	builder += Name::ToKiwi(var);
+	if (var) {
+		var->BuildString(builder);
+	}
+	else {
+		builder += "invalid variable";
+	}
 	
+	if (type && !expression) return;
+
 	builder += " = ";
 
 	if (expression) {

@@ -13,6 +13,7 @@
 namespace Kiwi {
 	class InstructionBlock;
 	class Function;
+	class Struct;
 
 	/// The root node for kiwi programs.
 	class KiwiProgram : public Node {
@@ -20,11 +21,17 @@ namespace Kiwi {
 		/// All code blocks.
 		Boxx::List<Ptr<InstructionBlock>> blocks;
 
+		/// All structs.
+		Boxx::Map<Boxx::String, Ptr<Struct>> structs;
+
 		/// All functions.
 		Boxx::Map<Boxx::String, Ptr<Function>> functions;
 
 		/// Adds a code block.
 		void AddCodeBlock(Ptr<InstructionBlock> block);
+
+		/// Adds a struct.
+		void AddStruct(Ptr<Struct> struct_);
 
 		/// Adds a function.
 		void AddFunction(Ptr<Function> function);
@@ -75,6 +82,25 @@ namespace Kiwi {
 		void AddInstruction(Ptr<Instruction> instruction);
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
+	/// A kiwi struct.
+	class Struct : public Node {
+	public:
+		/// The struct name.
+		Boxx::String name;
+
+		/// The struct variables.
+		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> vars;
+
+		Struct(const Boxx::String& name) {
+			this->name = name;
+		}
+
+		/// Adds a variable to the struct.
+		void AddVariable(const Boxx::String& type, const Boxx::String& var);
+
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 }

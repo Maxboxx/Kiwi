@@ -41,32 +41,32 @@ namespace Kiwi {
 		Boxx::Optional<Boxx::String> type;
 
 		/// The variable to assign to.
-		Boxx::String var;
+		Ptr<Variable> var;
 
 		/// The assign expression.
 		Ptr<Expression> expression;
 
 		AssignInstruction(const Boxx::String& var, Ptr<Expression> expression) {
 			this->type = nullptr;
-			this->var  = var;
+			this->var  = new Kiwi::Variable(var);
 			this->expression = expression;
 		}
 
 		AssignInstruction(const Boxx::String& type, const Boxx::String& var, Ptr<Expression> expression) {
 			this->type = type;
+			this->var  = new Kiwi::Variable(var);
+			this->expression = expression;
+		}
+
+		AssignInstruction(Ptr<Variable> var, Ptr<Expression> expression) {
+			this->type = nullptr;
 			this->var  = var;
 			this->expression = expression;
 		}
 
-		AssignInstruction(Weak<Variable> var, Ptr<Expression> expression) {
-			this->type = nullptr;
-			this->var  = var ? var->name : Boxx::String("");
-			this->expression = expression;
-		}
-
-		AssignInstruction(const Boxx::String& type, Weak<Variable> var, Ptr<Expression> expression) {
+		AssignInstruction(const Boxx::String& type, Ptr<Variable> var, Ptr<Expression> expression) {
 			this->type = type;
-			this->var  = var ? var->name : Boxx::String("");
+			this->var  = var;
 			this->expression = expression;
 		}
 
