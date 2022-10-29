@@ -38,7 +38,7 @@ namespace Kiwi {
 	class AssignInstruction : public Instruction {
 	public:
 		/// The type of the variable.
-		Boxx::Optional<Boxx::String> type;
+		Boxx::Optional<Type> type;
 
 		/// The variable to assign to.
 		Ptr<Variable> var;
@@ -52,7 +52,7 @@ namespace Kiwi {
 			this->expression = expression;
 		}
 
-		AssignInstruction(const Boxx::String& type, const Boxx::String& var, Ptr<Expression> expression) {
+		AssignInstruction(const Type& type, const Boxx::String& var, Ptr<Expression> expression) {
 			this->type = type;
 			this->var  = new Kiwi::Variable(var);
 			this->expression = expression;
@@ -64,7 +64,7 @@ namespace Kiwi {
 			this->expression = expression;
 		}
 
-		AssignInstruction(const Boxx::String& type, Ptr<Variable> var, Ptr<Expression> expression) {
+		AssignInstruction(const Type& type, Ptr<Variable> var, Ptr<Expression> expression) {
 			this->type = type;
 			this->var  = var;
 			this->expression = expression;

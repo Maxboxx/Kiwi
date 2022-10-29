@@ -60,10 +60,10 @@ namespace Kiwi {
 		Boxx::String name;
 
 		/// The return values.
-		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> returnValues;
+		Boxx::List<Boxx::Tuple<Type, Boxx::String>> returnValues;
 
 		/// The arguments.
-		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> arguments;
+		Boxx::List<Boxx::Tuple<Type, Boxx::String>> arguments;
 
 		/// The function body.
 		Ptr<InstructionBlock> block = new InstructionBlock();
@@ -73,10 +73,10 @@ namespace Kiwi {
 		}
 
 		/// Adds a return value to the function.
-		void AddReturnValue(const Boxx::String& type, const Boxx::String& name);
+		void AddReturnValue(const Type& type, const Boxx::String& name);
 
 		/// Adds an argument to the function.
-		void AddArgument(const Boxx::String& type, const Boxx::String& name);
+		void AddArgument(const Type& type, const Boxx::String& name);
 
 		/// Adds an instruction to the function body.
 		void AddInstruction(Ptr<Instruction> instruction);
@@ -92,14 +92,14 @@ namespace Kiwi {
 		Boxx::String name;
 
 		/// The struct variables.
-		Boxx::List<Boxx::Tuple<Boxx::String, Boxx::String>> vars;
+		Boxx::List<Boxx::Tuple<Type, Boxx::String>> vars;
 
 		Struct(const Boxx::String& name) {
 			this->name = name;
 		}
 
 		/// Adds a variable to the struct.
-		void AddVariable(const Boxx::String& type, const Boxx::String& var);
+		void AddVariable(const Type& type, const Boxx::String& var);
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};

@@ -61,11 +61,11 @@ void InstructionBlock::BuildString(StringBuilder& builder) {
 }
 
 
-void Function::AddReturnValue(const String& type, const String& name) {
+void Function::AddReturnValue(const Type& type, const String& name) {
 	returnValues.Add(Tuple<>::Create(type, name));
 }
 
-void Function::AddArgument(const String& type, const String& name) {
+void Function::AddArgument(const Type& type, const String& name) {
 	arguments.Add(Tuple<>::Create(type, name));
 }
 
@@ -91,11 +91,11 @@ void Function::BuildString(StringBuilder& builder) {
 		}
 
 		if (singleType) {
-			builder += Name::ToKiwi(returnValues[0].value1);
+			builder += returnValues[0].value1.ToKiwi();
 		}
 		else for (Int i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
-			builder += Name::ToKiwi(returnValues[i].value1);
+			builder += returnValues[i].value1.ToKiwi();
 		}
 
 		builder += ": ";
@@ -113,7 +113,7 @@ void Function::BuildString(StringBuilder& builder) {
 
 	for (Int i = 0; i < arguments.Count(); i++) {
 		if (i > 0) builder += ", ";
-		builder += Name::ToKiwi(arguments[i].value1);
+		builder += arguments[i].value1.ToKiwi();
 		builder += ": ";
 		builder += Name::ToKiwi(arguments[i].value2);
 	}
@@ -123,7 +123,7 @@ void Function::BuildString(StringBuilder& builder) {
 	block->BuildString(builder);
 }
 
-void Struct::AddVariable(const String& type, const String& var) {
+void Struct::AddVariable(const Type& type, const String& var) {
 	vars.Add(Tuple<>::Create(type, var));
 }
 
@@ -132,11 +132,13 @@ void Struct::BuildString(StringBuilder& builder) {
 	builder += Name::ToKiwi(name);
 	builder += ":\n";
 
-	for (const Tuple<String, String>& var : vars) {
+	for (const Tuple<Type, String>& var : vars) {
 		builder += '\t';
-		builder += Name::ToKiwi(var.value1);
+		builder += var.value1.ToKiwi();
 		builder += ": ";
 		builder += Name::ToKiwi(var.value2);
 		builder += '\n';
 	}
+
+	builder += '\n';
 }

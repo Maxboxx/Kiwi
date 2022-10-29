@@ -7,6 +7,7 @@
 
 namespace Kiwi {
 	class Value;
+	class Variable;
 
 	/// A kiwi expression.
 	class Expression : public Node {
@@ -53,6 +54,20 @@ namespace Kiwi {
 
 		CallExpression(const Boxx::String& func) {
 			this->func = func;
+		}
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
+	/// A ref expression.
+	class RefExpression : public Expression {
+	public:
+		/// The variable to reference.
+		Ptr<Variable> var;
+
+		RefExpression(Ptr<Variable> var) {
+			this->var = var;
 		}
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;

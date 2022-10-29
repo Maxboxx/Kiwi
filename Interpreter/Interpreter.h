@@ -7,6 +7,8 @@
 #include "../Boxx/Boxx/Stack.h"
 #include "../Boxx/Boxx/Error.h"
 
+#include "../Structs.h"
+
 ///N Kiwi::Interpreter
 
 namespace Kiwi {
@@ -22,10 +24,10 @@ namespace Kiwi {
 			virtual Ptr<Value> Copy() const = 0;
 
 			/// Converts the value to the specified type.
-			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const = 0;
+			virtual Ptr<Value> ConvertTo(const Type& type) const = 0;
 
 			/// Gets the type of the value.
-			virtual Boxx::String GetType() const = 0;
+			virtual Type GetType() const = 0;
 
 			/// Converts the value to a string.
 			virtual Boxx::String ToString() const = 0;
@@ -34,7 +36,7 @@ namespace Kiwi {
 		/// A stack frame.
 		class Frame {
 		public:
-			Boxx::Map<Boxx::String, Boxx::String> varTypes;
+			Boxx::Map<Boxx::String, Type> varTypes;
 			Boxx::Map<Boxx::String, Ptr<Value>> variables;
 
 			virtual ~Frame() {}
@@ -62,13 +64,13 @@ namespace Kiwi {
 			}
 
 			/// Gets the type of a variable.
-			Boxx::String GetVarType(const Boxx::String& var) {
-				if (!varTypes.Contains(var)) return "";
+			Type GetVarType(const Boxx::String& var) {
+				if (!varTypes.Contains(var)) return Type();
 				return varTypes[var];
 			}
 
 			/// Sets the type of a variable.
-			void SetVarType(const Boxx::String& var, const Boxx::String& type) {
+			void SetVarType(const Boxx::String& var, const Type& type) {
 				varTypes.Set(var, type);
 			}
 		};
@@ -140,30 +142,32 @@ namespace Kiwi {
 				return value;
 			}
 
-			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const override {
-				if (type == "i8")  return new Int<Boxx::Byte>(value);
-				if (type == "u8")  return new Int<Boxx::UByte>(value);
-				if (type == "i16") return new Int<Boxx::Short>(value);
-				if (type == "u16") return new Int<Boxx::UShort>(value);
-				if (type == "i32") return new Int<Boxx::Int>(value);
-				if (type == "u32") return new Int<Boxx::UInt>(value);
-				if (type == "i64") return new Int<Boxx::Long>(value);
-				if (type == "u64") return new Int<Boxx::ULong>(value);
+			virtual Ptr<Value> ConvertTo(const Type& type) const override {
+				if (type.pointers > 0) return nullptr;
+
+				if (type.name == "i8")  return new Int<Boxx::Byte>(value);
+				if (type.name == "u8")  return new Int<Boxx::UByte>(value);
+				if (type.name == "i16") return new Int<Boxx::Short>(value);
+				if (type.name == "u16") return new Int<Boxx::UShort>(value);
+				if (type.name == "i32") return new Int<Boxx::Int>(value);
+				if (type.name == "u32") return new Int<Boxx::UInt>(value);
+				if (type.name == "i64") return new Int<Boxx::Long>(value);
+				if (type.name == "u64") return new Int<Boxx::ULong>(value);
 
 				return nullptr;
 			}
 
-			virtual Boxx::String GetType() const override {
-				if constexpr (std::is_same<T, Boxx::Byte>::value)   return "i8";
-				if constexpr (std::is_same<T, Boxx::UByte>::value)  return "u8";
-				if constexpr (std::is_same<T, Boxx::Short>::value)  return "i16";
-				if constexpr (std::is_same<T, Boxx::UShort>::value) return "u16";
-				if constexpr (std::is_same<T, Boxx::Int>::value)    return "i32";
-				if constexpr (std::is_same<T, Boxx::UInt>::value)   return "u32";
-				if constexpr (std::is_same<T, Boxx::Long>::value)   return "i64";
-				if constexpr (std::is_same<T, Boxx::ULong>::value)  return "u64";
+			virtual Type GetType() const override {
+				if constexpr (std::is_same<T, Boxx::Byte>::value)   return Type("i8");
+				if constexpr (std::is_same<T, Boxx::UByte>::value)  return Type("u8");
+				if constexpr (std::is_same<T, Boxx::Short>::value)  return Type("i16");
+				if constexpr (std::is_same<T, Boxx::UShort>::value) return Type("u16");
+				if constexpr (std::is_same<T, Boxx::Int>::value)    return Type("i32");
+				if constexpr (std::is_same<T, Boxx::UInt>::value)   return Type("u32");
+				if constexpr (std::is_same<T, Boxx::Long>::value)   return Type("i64");
+				if constexpr (std::is_same<T, Boxx::ULong>::value)  return Type("u64");
 
-				return "";
+				return Type();
 			}
 		};
 
@@ -198,12 +202,12 @@ namespace Kiwi {
 			Weak<KiwiProgram> program;
 
 			/// The type of the struct value.
-			Boxx::String type;
+			Type type;
 
 			/// The struct data.
 			Boxx::Map<Boxx::String, Ptr<Value>> data;
 
-			StructValue(const Boxx::String& type, Weak<KiwiProgram> program) {
+			StructValue(const Type& type, Weak<KiwiProgram> program) {
 				this->program = program;
 				this->type = type;
 			}
@@ -230,7 +234,7 @@ namespace Kiwi {
 				return value;
 			}
 
-			virtual Ptr<Value> ConvertTo(const Boxx::String& type) const {
+			virtual Ptr<Value> ConvertTo(const Type& type) const {
 				if (this->type == type) {
 					return Copy();
 				}
@@ -238,7 +242,7 @@ namespace Kiwi {
 				return nullptr;
 			}
 
-			virtual Boxx::String GetType() const {
+			virtual Type GetType() const {
 				return type;
 			}
 

@@ -21,13 +21,13 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 	data.PushFrame();
 
 	for (int i = 0; i < args.Count(); i++) {
-		Tuple<String, String> arg = function->arguments[i];
+		Tuple<Type, String> arg = function->arguments[i];
 		data.frame->SetVarType(arg.value2, arg.value1);
 		data.frame->SetVarValue(arg.value2, argValues[i]);
 	}
 
 	for (int i = 0; i < function->returnValues.Count(); i++) {
-		Tuple<String, String> value = function->returnValues[i];
+		Tuple<Type, String> value = function->returnValues[i];
 		data.frame->SetVarType(value.value2, value.value1);
 	}
 
@@ -51,6 +51,15 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	}
 
 	builder += ')';
+}
+
+Ptr<Interpreter::Value> RefExpression::Evaluate(Interpreter::InterpreterData& data) {
+	return nullptr;
+}
+
+void RefExpression::BuildString(StringBuilder& builder) {
+	builder += "ref ";
+	var->BuildString(builder);
 }
 
 Ptr<Interpreter::Value> UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {

@@ -34,12 +34,12 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	}
 	else {
 		if (value) {
-			String valueType = value->GetType();
+			Type valueType = value->GetType();
 
 			value = value->ConvertTo(data.frame->GetVarType(var->name));
 
 			if (!value) {
-				throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType + "' to '" + data.frame->GetVarType(var->name) + "'");
+				throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType.ToKiwi() + "' to '" + data.frame->GetVarType(var->name).ToKiwi() + "'");
 			}
 		}
 
@@ -49,7 +49,7 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 	if (type) {
-		builder += *type;
+		builder += (*type).ToKiwi();
 		builder += ": ";
 	}
 
