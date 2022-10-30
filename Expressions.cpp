@@ -59,6 +59,13 @@ void CallExpression::BuildString(StringBuilder& builder) {
 
 Ptr<Interpreter::Value> RefExpression::Evaluate(Interpreter::InterpreterData& data) {
 	Weak<Interpreter::Value> value = var->EvaluateRef(data);
+
+	if (!value) {
+		StringBuilder builder;
+		var->BuildString(builder);
+		throw Interpreter::KiwiInterpretError("can not reference '" + builder.ToString() + "'");
+	}
+
 	Type type = value->GetType();
 	type.pointers++;
 	return new Interpreter::PtrValue(type, value);
