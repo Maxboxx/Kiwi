@@ -84,6 +84,7 @@ namespace Kiwi {
 			this->call = call;
 		}
 
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 

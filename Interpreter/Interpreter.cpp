@@ -45,3 +45,7 @@ Boxx::String StructValue::ToString() const {
 
 	return builder.ToString();
 }
+
+Boxx::String PtrValue::ToString() const {
+	return '*' + value->ToString();
+}

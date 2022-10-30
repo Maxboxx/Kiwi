@@ -26,7 +26,7 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Ptr<Interpreter::Value> value = expression->Evaluate(data);
 
 	if (subVar) {
-		Weak<Interpreter::StructValue> struct_ = subVar->var->GetStructRef(data);
+		Weak<Interpreter::StructValue> struct_ = subVar->var->EvaluateRef(data).As<Interpreter::StructValue>();
 
 		if (struct_) {
 			struct_->SetValue(subVar->name, value);
@@ -72,6 +72,9 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 	}
 }
 
+void CallInstruction::Interpret(Interpreter::InterpreterData& data) {
+	call->Evaluate(data);
+}
 
 void CallInstruction::BuildString(Boxx::StringBuilder& builder) {
 	call->BuildString(builder);

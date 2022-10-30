@@ -4,16 +4,16 @@ using namespace Boxx;
 
 using namespace Kiwi;
 
-Weak<Interpreter::StructValue> Variable::GetStructRef(Interpreter::InterpreterData& data) const {
-	return data.frame->GetVarValue(name).As<Interpreter::StructValue>();
+Weak<Interpreter::Value> Variable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	return data.frame->GetVarValue(name);
 }
 
 Ptr<Interpreter::Value> Variable::Evaluate(Interpreter::InterpreterData& data) {
 	return data.frame->GetVarValueCopy(name);
 }
 
-Weak<Interpreter::StructValue> SubVariable::GetStructRef(Interpreter::InterpreterData& data) const {
-	Weak<Interpreter::StructValue> struct_ = var->GetStructRef(data);
+Weak<Interpreter::Value> SubVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	Weak<Interpreter::StructValue> struct_ = var->EvaluateRef(data).As<Interpreter::StructValue>();
 
 	if (struct_->data.Contains(name)) {
 		return struct_->data[name].As<Interpreter::StructValue>();
@@ -31,6 +31,26 @@ Ptr<Interpreter::Value> SubVariable::Evaluate(Interpreter::InterpreterData& data
 		if (value) {
 			return value->Copy();
 		}
+	}
+
+	return nullptr;
+}
+
+Weak<Interpreter::Value> DerefVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	Weak<Interpreter::PtrValue> ptr = data.frame->GetVarValue(name).As<Interpreter::PtrValue>();
+
+	if (ptr) {
+		return ptr->value;
+	}
+
+	return nullptr;
+}
+
+Ptr<Interpreter::Value> DerefVariable::Evaluate(Interpreter::InterpreterData& data) {
+	Weak<Interpreter::PtrValue> ptr = data.frame->GetVarValue(name).As<Interpreter::PtrValue>();
+
+	if (ptr) {
+		return ptr->value->Copy();
 	}
 
 	return nullptr;

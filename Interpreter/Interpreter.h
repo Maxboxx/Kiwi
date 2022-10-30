@@ -249,6 +249,39 @@ namespace Kiwi {
 			virtual Boxx::String ToString() const;
 		};
 
+		/// A pointer value.
+		class PtrValue : public Value {
+		public:
+			/// The type.
+			Type type;
+
+			/// The value pointed at.
+			Weak<Value> value;
+
+			PtrValue(const Type& type, Weak<Value> value) {
+				this->type  = type;
+				this->value = value;
+			}
+
+			virtual Ptr<Value> Copy() const {
+				return new PtrValue(type, value);
+			}
+
+			virtual Ptr<Value> ConvertTo(const Type& type) const {
+				if (type.pointers == 0) {
+					return nullptr;
+				}
+
+				return Copy();
+			}
+
+			virtual Type GetType() const {
+				return type;
+			}
+
+			virtual Boxx::String ToString() const;
+		};
+
 		/// Error for interpreting.
 		class KiwiInterpretError : public Boxx::Error {
 		public:

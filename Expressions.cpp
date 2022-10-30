@@ -33,7 +33,11 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 
 	function->block->Interpret(data);
 
-	Ptr<Interpreter::Value> ret = data.frame->GetVarValueCopy(function->returnValues[0].value2);
+	Ptr<Interpreter::Value> ret = nullptr;
+	
+	if (function->returnValues.Count() > 0) {
+		ret = data.frame->GetVarValueCopy(function->returnValues[0].value2);
+	}
 
 	data.PopFrame();
 
@@ -54,7 +58,10 @@ void CallExpression::BuildString(StringBuilder& builder) {
 }
 
 Ptr<Interpreter::Value> RefExpression::Evaluate(Interpreter::InterpreterData& data) {
-	return nullptr;
+	Weak<Interpreter::Value> value = var->EvaluateRef(data);
+	Type type = value->GetType();
+	type.pointers++;
+	return new Interpreter::PtrValue(type, value);
 }
 
 void RefExpression::BuildString(StringBuilder& builder) {

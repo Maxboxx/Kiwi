@@ -30,8 +30,8 @@ namespace Kiwi {
 			return new Variable(name);
 		}
 		
-		/// Gets the struct ref of the variable.
-		virtual Weak<Interpreter::StructValue> GetStructRef(Interpreter::InterpreterData& data) const;
+		/// Gets the ref of the variable.
+		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const;
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 
@@ -54,13 +54,32 @@ namespace Kiwi {
 			return new SubVariable(var->Copy(), name);
 		}
 
-		virtual Weak<Interpreter::StructValue> GetStructRef(Interpreter::InterpreterData& data) const override;
+		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const override;
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			var->BuildString(builder);
 			builder += '.';
+			builder += Name::ToKiwi(name);
+		}
+	};
+
+	/// A variable that is dereferenced.
+	class DerefVariable : public Variable {
+	public:
+		DerefVariable(const Boxx::String& var) : Variable(var) {}
+
+		virtual Ptr<Variable> Copy() const override {
+			return new DerefVariable(name);
+		}
+
+		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const override;
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+
+		virtual void BuildString(Boxx::StringBuilder& builder) override {
+			builder += '*';
 			builder += Name::ToKiwi(name);
 		}
 	};
