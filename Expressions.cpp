@@ -22,13 +22,13 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 
 	for (int i = 0; i < args.Count(); i++) {
 		Tuple<Type, String> arg = function->arguments[i];
-		data.frame->SetVarType(arg.value2, arg.value1);
+		data.frame->CreateVariable(arg.value2, arg.value1);
 		data.frame->SetVarValue(arg.value2, argValues[i]);
 	}
 
 	for (int i = 0; i < function->returnValues.Count(); i++) {
 		Tuple<Type, String> value = function->returnValues[i];
-		data.frame->SetVarType(value.value2, value.value1);
+		data.frame->CreateVariable(value.value2, value.value1);
 	}
 
 	function->block->Interpret(data);

@@ -13,7 +13,7 @@ namespace Kiwi {
 	class Expression : public Node {
 	public:
 		virtual void Interpret(Interpreter::InterpreterData& data) final override {
-			throw Boxx::Error("Call Evaluate instead");
+			throw Interpreter::KiwiInterpretError("Call Evaluate instead");
 		}
 
 		/// Evaluates the expression.

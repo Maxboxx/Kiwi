@@ -33,6 +33,17 @@ namespace Kiwi {
 			virtual Boxx::String ToString() const = 0;
 		};
 
+		/// Error for interpreting.
+		class KiwiInterpretError : public Boxx::Error {
+		public:
+			KiwiInterpretError() : Boxx::Error() {}
+			KiwiInterpretError(const char* const msg) : Boxx::Error(msg) {}
+
+			virtual Boxx::String Name() const override {
+				return "KiwiInterpretError";
+			}
+		};
+
 		/// A stack frame.
 		class Frame {
 		public:
@@ -43,34 +54,56 @@ namespace Kiwi {
 
 			/// Gets the value of the specified variable.
 			Weak<Value> GetVarValue(const Boxx::String& var) {
-				if (!variables.Contains(var)) return nullptr;
+				if (!variables.Contains(var)) {
+					throw KiwiInterpretError("Variable '" + var + "' does not have a value");
+				}
+
 				return variables[var];
 			}
 
 			/// Gets a copy of the value for the specified variable.
 			Ptr<Value> GetVarValueCopy(const Boxx::String& var) {
-				if (!variables.Contains(var)) return nullptr;
+				if (!variables.Contains(var)) {
+					throw KiwiInterpretError("Variable '" + var + "' does not have a value");
+				}
+
 				return variables[var]->Copy();
 			}
 
 			/// Sets the value of a variable.
 			void SetVarValue(const Boxx::String& var, Ptr<Value> value) {
+				if (!varTypes.Contains(var)) {
+					throw KiwiInterpretError("Variable '" + var + "' does not exist");
+				}
+
 				if (!value) {
-					variables.Remove(var);
+					throw KiwiInterpretError("Invalid value to assign to '" + var + "'");
 				}
-				else {
-					variables.Set(var, value);
+
+				Ptr<Value> converted = value->ConvertTo(varTypes[var]);
+				
+				if (!converted) {
+					throw KiwiInterpretError("Could not assign value of type " + value->GetType().ToKiwi() + " to '" + var + "', " + varTypes[var].ToKiwi() + " expected");
 				}
+
+				variables.Set(var, converted);
 			}
 
 			/// Gets the type of a variable.
 			Type GetVarType(const Boxx::String& var) {
-				if (!varTypes.Contains(var)) return Type();
+				if (!varTypes.Contains(var)) {
+					throw KiwiInterpretError("Variable '" + var + "' does not exist");
+				}
+
 				return varTypes[var];
 			}
 
-			/// Sets the type of a variable.
-			void SetVarType(const Boxx::String& var, const Type& type) {
+			/// Creates a variable.
+			void CreateVariable(const Boxx::String& var, const Type& type) {
+				if (varTypes.Contains(var)) {
+					throw KiwiInterpretError("Variable '" + var + "' already exists");
+				}
+
 				varTypes.Set(var, type);
 			}
 		};
@@ -111,6 +144,7 @@ namespace Kiwi {
 		class Integer : public Value {
 		public:
 			virtual Boxx::Long ToLong() const = 0;
+			virtual void SetLong(Boxx::Long value) = 0;
 		};
 
 		/// Template class for integer types.
@@ -140,6 +174,10 @@ namespace Kiwi {
 
 			virtual Boxx::Long ToLong() const override {
 				return value;
+			}
+
+			virtual void SetLong(Boxx::Long value) override {
+				this->value = value;
 			}
 
 			virtual Ptr<Value> ConvertTo(const Type& type) const override {
@@ -280,17 +318,6 @@ namespace Kiwi {
 			}
 
 			virtual Boxx::String ToString() const;
-		};
-
-		/// Error for interpreting.
-		class KiwiInterpretError : public Boxx::Error {
-		public:
-			KiwiInterpretError() : Boxx::Error() {}
-			KiwiInterpretError(const char* const msg) : Boxx::Error(msg) {}
-
-			virtual Boxx::String Name() const override {
-				return "KiwiInterpretError";
-			}
 		};
 	}
 }

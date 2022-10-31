@@ -10,7 +10,7 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Weak<SubVariable> subVar = var.As<SubVariable>();
 
 	if (type && !subVar) {
-		data.frame->SetVarType(var->name, *type);
+		data.frame->CreateVariable(var->name, *type);
 	}
 
 	if (!expression) {
@@ -31,18 +31,23 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 		if (struct_) {
 			struct_->SetValue(subVar->name, value);
 		}
+		else {
+			throw Interpreter::KiwiInterpretError("struct assign error");
+		}
 	}
-	else {
-		if (value) {
-			Type valueType = value->GetType();
+	else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
+		Weak<Interpreter::Value> ptr = deref->EvaluateRef(data);
 
-			value = value->ConvertTo(data.frame->GetVarType(var->name));
-
-			if (!value) {
-				throw Interpreter::KiwiInterpretError("can not convert value of type '" + valueType.ToKiwi() + "' to '" + data.frame->GetVarType(var->name).ToKiwi() + "'");
+		if (Weak<Interpreter::Integer> integer = ptr.As<Interpreter::Integer>()) {
+			if (Weak<Interpreter::Integer> valueInt = value.As<Interpreter::Integer>()) {
+				integer->SetLong(valueInt->ToLong());
+				return;
 			}
 		}
 
+		throw Interpreter::KiwiInterpretError("deref assign error");
+	}
+	else {
 		data.frame->SetVarValue(var->name, value);
 	}
 }
