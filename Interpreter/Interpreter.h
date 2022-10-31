@@ -20,6 +20,10 @@ namespace Kiwi {
 		public:
 			virtual ~Value() {}
 
+			/// Sets the value.
+			///R success: {true} if the value was set successfully.
+			virtual bool SetValue(Weak<Value> value) = 0;
+
 			/// Copies the value.
 			virtual Ptr<Value> Copy() const = 0;
 
@@ -145,6 +149,15 @@ namespace Kiwi {
 		public:
 			virtual Boxx::Long ToLong() const = 0;
 			virtual void SetLong(Boxx::Long value) = 0;
+
+			virtual bool SetValue(Weak<Value> value) override {
+				if (Weak<Interpreter::Integer> intValue = value.As<Interpreter::Integer>()) {
+					SetLong(intValue->ToLong());
+					return true;
+				}
+
+				return false;
+			}
 		};
 
 		/// Template class for integer types.
@@ -250,6 +263,22 @@ namespace Kiwi {
 				this->type = type;
 			}
 
+			virtual bool SetValue(Weak<Value> value) override {
+				if (Weak<StructValue> struct_ = value.As<StructValue>()) {
+					if (GetType() == struct_->GetType()) {
+						data = Boxx::Map<Boxx::String, Ptr<Value>>();
+
+						for (Boxx::Pair<Boxx::String, Ptr<Value>>& pair : struct_->data) {
+							data.Add(pair.key, pair.value->Copy());
+						}
+
+						return true;
+					}
+				}
+
+				return false;
+			}
+
 			/// Sets the specified struct value.
 			void SetValue(const Boxx::String& var, Ptr<Value> value);
 
@@ -299,6 +328,10 @@ namespace Kiwi {
 			PtrValue(const Type& type, Weak<Value> value) {
 				this->type  = type;
 				this->value = value;
+			}
+
+			virtual bool SetValue(Weak<Value> value) override {
+				return false;
 			}
 
 			virtual Ptr<Value> Copy() const {

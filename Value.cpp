@@ -56,6 +56,25 @@ Ptr<Interpreter::Value> DerefVariable::Evaluate(Interpreter::InterpreterData& da
 	return nullptr;
 }
 
+Ptr<Interpreter::Value> RefValue::Evaluate(Interpreter::InterpreterData& data) {
+	Weak<Interpreter::Value> value = var->EvaluateRef(data);
+
+	if (!value) {
+		StringBuilder builder;
+		var->BuildString(builder);
+		throw Interpreter::KiwiInterpretError("can not reference '" + builder.ToString() + "'");
+	}
+
+	Type type = value->GetType();
+	type.pointers++;
+	return new Interpreter::PtrValue(type, value);
+}
+
+void RefValue::BuildString(StringBuilder& builder) {
+	builder += '&';
+	var->BuildString(builder);
+}
+
 Ptr<Interpreter::Value> Integer::Evaluate(Interpreter::InterpreterData& data) {
 	return new Interpreter::Int64(value);
 }

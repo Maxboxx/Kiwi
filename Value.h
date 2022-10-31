@@ -84,6 +84,20 @@ namespace Kiwi {
 		}
 	};
 
+	/// A ref value.
+	class RefValue : public Value {
+	public:
+		/// The variable to reference.
+		Ptr<Variable> var;
+
+		RefValue(Ptr<Variable> var) {
+			this->var = var;
+		}
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// A Kiwi integer.
 	class Integer : public Value {
 	public:

@@ -57,25 +57,6 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += ')';
 }
 
-Ptr<Interpreter::Value> RefExpression::Evaluate(Interpreter::InterpreterData& data) {
-	Weak<Interpreter::Value> value = var->EvaluateRef(data);
-
-	if (!value) {
-		StringBuilder builder;
-		var->BuildString(builder);
-		throw Interpreter::KiwiInterpretError("can not reference '" + builder.ToString() + "'");
-	}
-
-	Type type = value->GetType();
-	type.pointers++;
-	return new Interpreter::PtrValue(type, value);
-}
-
-void RefExpression::BuildString(StringBuilder& builder) {
-	builder += "ref ";
-	var->BuildString(builder);
-}
-
 Ptr<Interpreter::Value> UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
 	Ptr<Interpreter::Value> a = value->Evaluate(data); 
 

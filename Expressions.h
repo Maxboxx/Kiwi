@@ -60,20 +60,6 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
-	/// A ref expression.
-	class RefExpression : public Expression {
-	public:
-		/// The variable to reference.
-		Ptr<Variable> var;
-
-		RefExpression(Ptr<Variable> var) {
-			this->var = var;
-		}
-
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
-		virtual void BuildString(Boxx::StringBuilder& builder) override;
-	};
-
 	/// A unary expression for numbers.
 	class UnaryNumberExpression : public UnaryExpression {
 	public:

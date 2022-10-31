@@ -38,14 +38,9 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
 		Weak<Interpreter::Value> ptr = deref->EvaluateRef(data);
 
-		if (Weak<Interpreter::Integer> integer = ptr.As<Interpreter::Integer>()) {
-			if (Weak<Interpreter::Integer> valueInt = value.As<Interpreter::Integer>()) {
-				integer->SetLong(valueInt->ToLong());
-				return;
-			}
+		if (!ptr->SetValue(value)) {
+			throw Interpreter::KiwiInterpretError("deref assign error");
 		}
-
-		throw Interpreter::KiwiInterpretError("deref assign error");
 	}
 	else {
 		data.frame->SetVarValue(var->name, value);
