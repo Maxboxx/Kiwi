@@ -57,6 +57,10 @@ Ptr<Interpreter::Value> DerefVariable::Evaluate(Interpreter::InterpreterData& da
 }
 
 Ptr<Interpreter::Value> RefValue::Evaluate(Interpreter::InterpreterData& data) {
+	if (!var) {
+		throw Interpreter::KiwiInterpretError("invalid value to reference");
+	}
+
 	Weak<Interpreter::Value> value = var->EvaluateRef(data);
 
 	if (!value) {
@@ -72,7 +76,13 @@ Ptr<Interpreter::Value> RefValue::Evaluate(Interpreter::InterpreterData& data) {
 
 void RefValue::BuildString(StringBuilder& builder) {
 	builder += '&';
-	var->BuildString(builder);
+
+	if (var) {
+		var->BuildString(builder);
+	}
+	else {
+		builder += "invalid value";
+	}
 }
 
 Ptr<Interpreter::Value> Integer::Evaluate(Interpreter::InterpreterData& data) {
