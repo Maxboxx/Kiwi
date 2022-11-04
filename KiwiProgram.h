@@ -11,7 +11,7 @@
 ///N Kiwi
 
 namespace Kiwi {
-	class InstructionBlock;
+	class CodeBlock;
 	class Function;
 	class Struct;
 
@@ -19,7 +19,7 @@ namespace Kiwi {
 	class KiwiProgram : public Node {
 	public:
 		/// All code blocks.
-		Boxx::List<Ptr<InstructionBlock>> blocks;
+		Boxx::List<Ptr<CodeBlock>> blocks;
 
 		/// All structs.
 		Boxx::Map<Boxx::String, Ptr<Struct>> structs;
@@ -28,7 +28,7 @@ namespace Kiwi {
 		Boxx::Map<Boxx::String, Ptr<Function>> functions;
 
 		/// Adds a code block.
-		void AddCodeBlock(Ptr<InstructionBlock> block);
+		void AddCodeBlock(Ptr<CodeBlock> block);
 
 		/// Adds a struct.
 		void AddStruct(Ptr<Struct> struct_);
@@ -40,17 +40,45 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	class InstructionBlock;
+
+	/// A code block.
+	class CodeBlock : public Node {
+	public:
+		/// The main instruction block.
+		Ptr<InstructionBlock> mainBlock;
+
+		/// The instruction blocks.
+		Boxx::List<Ptr<InstructionBlock>> blocks;
+
+		CodeBlock();
+
+		/// Adds an instruction block.
+		void AddInstructionBlock(Ptr<InstructionBlock> subBlock);
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// A block of instructions.
 	class InstructionBlock : public Node {
 	public:
+		/// The label for the sub block.
+		Boxx::String label;
+
 		/// All instructions.
 		Boxx::List<Ptr<Instruction>> instructions;
 
-		/// Adds an instruction to the block.
+		InstructionBlock(const Boxx::String& label) {
+			this->label = label;
+		}
+
+		/// Adds an instruction to the sub block.
 		void AddInstruction(Ptr<Instruction> instruction);
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
+		void BuildStringNoLabel(Boxx::StringBuilder& builder);
 	};
 
 	/// A kiwi function.
@@ -66,7 +94,7 @@ namespace Kiwi {
 		Boxx::List<Boxx::Tuple<Type, Boxx::String>> arguments;
 
 		/// The function body.
-		Ptr<InstructionBlock> block = new InstructionBlock();
+		Ptr<CodeBlock> block = new CodeBlock();
 
 		Function(const Boxx::String& name) {
 			this->name = name;

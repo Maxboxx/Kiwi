@@ -1,5 +1,7 @@
 #include "Instruction.h"
 
+#include "KiwiProgram.h"
+
 #include "Boxx/Boxx/Console.h"
 
 using namespace Boxx;
@@ -78,6 +80,50 @@ void CallInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 void CallInstruction::BuildString(Boxx::StringBuilder& builder) {
 	call->BuildString(builder);
+}
+
+void GotoInstruction::Interpret(Interpreter::InterpreterData& data) {
+	data.gotoLabel = label;
+}
+
+IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::String& label) {
+	this->condition  = condition;
+	this->trueLabel  = label;
+	this->falseLabel = nullptr;
+}
+
+IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::String& trueLabel, const Boxx::String& falseLabel) {
+	this->condition  = condition;
+	this->trueLabel  = trueLabel;
+	this->falseLabel = falseLabel;
+}
+
+void IfInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Ptr<Interpreter::Value> value = condition->Evaluate(data);
+
+	if (Weak<Interpreter::Integer> integer = value.As<Interpreter::Integer>()) {
+		if (integer->ToLong() != 0) {
+			data.gotoLabel = trueLabel;
+		}
+		else if (falseLabel) {
+			data.gotoLabel = *falseLabel;
+		}
+	}
+	else {
+		throw Interpreter::KiwiInterpretError("invalid condition");
+	}
+}
+
+void IfInstruction::BuildString(Boxx::StringBuilder& builder) {
+	builder += "if ";
+	condition->BuildString(builder);
+	builder += ": ";
+	builder += Name::ToKiwi(trueLabel);
+
+	if (falseLabel) {
+		builder += ", ";
+		builder += Name::ToKiwi(*falseLabel);
+	}
 }
 
 void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {

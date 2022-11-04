@@ -4,7 +4,7 @@ using namespace Boxx;
 
 using namespace Kiwi;
 
-void KiwiProgram::AddCodeBlock(Ptr<InstructionBlock> block) {
+void KiwiProgram::AddCodeBlock(Ptr<CodeBlock> block) {
 	blocks.Add(block);
 }
 
@@ -17,7 +17,7 @@ void KiwiProgram::AddFunction(Ptr<Function> function) {
 }
 
 void KiwiProgram::Interpret(Interpreter::InterpreterData& data) {
-	for (Weak<InstructionBlock> block : blocks) {
+	for (Weak<CodeBlock> block : blocks) {
 		data.PushFrame();
 		block->Interpret(data);
 		data.PopFrame();
@@ -25,7 +25,7 @@ void KiwiProgram::Interpret(Interpreter::InterpreterData& data) {
 }
 
 void KiwiProgram::BuildString(StringBuilder& builder) {
-	for (Weak<InstructionBlock> block : blocks) {
+	for (Weak<CodeBlock> block : blocks) {
 		builder += "code:\n";
 		block->BuildString(builder);
 	}
@@ -39,6 +39,52 @@ void KiwiProgram::BuildString(StringBuilder& builder) {
 	}
 }
 
+CodeBlock::CodeBlock() {
+	mainBlock = new InstructionBlock("");
+}
+
+void CodeBlock::AddInstructionBlock(Ptr<InstructionBlock> block) {
+	blocks.Add(block);
+}
+
+void CodeBlock::Interpret(Interpreter::InterpreterData& data) {
+	data.gotoLabel = nullptr;
+	mainBlock->Interpret(data);
+
+	if (!data.gotoLabel && blocks.Count() > 0) {
+		data.gotoLabel = blocks[0]->label;
+	}
+
+	while (data.gotoLabel) {
+		bool found = false;
+
+		for (Weak<InstructionBlock> block : blocks) {
+			if (block->label == *data.gotoLabel) {
+				found = true;
+				data.gotoLabel = nullptr;
+				block->Interpret(data);
+
+				if (data.gotoLabel) {
+					break;
+				}
+			}
+		}
+
+		if (!found && data.gotoLabel) {
+			throw Interpreter::KiwiInterpretError("label '" + Name::ToKiwi(*data.gotoLabel) + "' not found");
+		}
+	}
+}
+
+void CodeBlock::BuildString(StringBuilder& builder) {
+	mainBlock->BuildStringNoLabel(builder);
+
+	for (Weak<InstructionBlock> block : blocks) {
+		block->BuildString(builder);
+	}
+
+	builder += '\n';
+}
 
 void InstructionBlock::AddInstruction(Ptr<Instruction> instruction) {
 	instructions.Add(instruction);
@@ -46,18 +92,27 @@ void InstructionBlock::AddInstruction(Ptr<Instruction> instruction) {
 
 void InstructionBlock::Interpret(Interpreter::InterpreterData& data) {
 	for (Weak<Instruction> instruction : instructions) {
+		if (data.gotoLabel) {
+			return;
+		}
+
 		instruction->Interpret(data);
 	}
 }
 
 void InstructionBlock::BuildString(StringBuilder& builder) {
+	builder += Name::ToKiwi(label);
+	builder += ":\n";
+
+	BuildStringNoLabel(builder);
+}
+
+void InstructionBlock::BuildStringNoLabel(StringBuilder& builder) {
 	for (Weak<Instruction> instruction : instructions) {
 		builder += '\t';
 		instruction->BuildString(builder);
 		builder += '\n';
 	}
-
-	builder += '\n';
 }
 
 
@@ -70,7 +125,7 @@ void Function::AddArgument(const Type& type, const String& name) {
 }
 
 void Function::AddInstruction(Ptr<Instruction> instruction) {
-	block->AddInstruction(instruction);
+	block->mainBlock->AddInstruction(instruction);
 }
 
 void Function::Interpret(Interpreter::InterpreterData& data) {

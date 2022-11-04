@@ -3,6 +3,7 @@
 #include "../Ptr.h"
 
 #include "../Boxx/Boxx/String.h"
+#include "../Boxx/Boxx/Optional.h"
 #include "../Boxx/Boxx/Map.h"
 #include "../Boxx/Boxx/Stack.h"
 #include "../Boxx/Boxx/Error.h"
@@ -116,6 +117,9 @@ namespace Kiwi {
 		struct InterpreterData {
 			/// The current Kiwi program.
 			Weak<KiwiProgram> program;
+
+			/// The next label to go to.
+			Boxx::Optional<Boxx::String> gotoLabel;
 
 			/// All stack frames.
 			Boxx::Stack<Ptr<Frame>> frames;

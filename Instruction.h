@@ -98,6 +98,43 @@ namespace Kiwi {
 		}
 	};
 
+	/// A goto instruction.
+	class GotoInstruction : public Instruction {
+	public:
+		/// The label to go to.
+		Boxx::String label;
+
+		GotoInstruction(const Boxx::String& label) {
+			this->label = label;
+		}
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+
+		virtual void BuildString(Boxx::StringBuilder& builder) override {
+			builder += "goto ";
+			builder += Name::ToKiwi(label);
+		}
+	};
+
+	/// An if instruction.
+	class IfInstruction : public Instruction {
+	public:
+		/// The condition
+		Ptr<Expression> condition;
+
+		/// The label to use if the condition is true.
+		Boxx::String trueLabel;
+
+		/// The label to use if the condition is false
+		Boxx::Optional<Boxx::String> falseLabel;
+
+		IfInstruction(Ptr<Expression> condition, const Boxx::String& label);
+		IfInstruction(Ptr<Expression> condition, const Boxx::String& trueLabel, const Boxx::String& falseLabel);
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// Base for instructions used for debugging.
 	class DebugInstruction : public Instruction {
 	public:
