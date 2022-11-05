@@ -105,8 +105,12 @@ namespace Kiwi {
 
 			/// Creates a variable.
 			void CreateVariable(const Boxx::String& var, const Type& type) {
-				if (varTypes.Contains(var)) {
-					throw KiwiInterpretError("Variable '" + var + "' already exists");
+				Type varType;
+
+				if (varTypes.Contains(var, varType)) {
+					if (type != varType) {
+						throw KiwiInterpretError("Variable '" + var + "' already exists with a different type");
+					}
 				}
 
 				varTypes.Set(var, type);
