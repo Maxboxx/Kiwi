@@ -58,13 +58,16 @@ void CodeBlock::Interpret(Interpreter::InterpreterData& data) {
 	while (data.gotoLabel) {
 		bool found = false;
 
-		for (Weak<InstructionBlock> block : blocks) {
-			if (block->label == *data.gotoLabel) {
+		for (UInt i = 0; i < blocks.Count(); i++) {
+			if (blocks[i]->label == data.gotoLabel) {
 				found = true;
 				data.gotoLabel = nullptr;
-				block->Interpret(data);
+				blocks[i]->Interpret(data);
 
-				if (data.gotoLabel) {
+				if (!data.gotoLabel && i + 1 < blocks.Count()) {
+					data.gotoLabel = blocks[i + 1]->label;
+				}
+				else {
 					break;
 				}
 			}
