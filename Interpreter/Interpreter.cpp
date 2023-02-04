@@ -23,16 +23,25 @@ void StructValue::SetValue(const Boxx::String& var, Ptr<Value> value) {
 }
 
 Boxx::String StructValue::ToString() const {
+	return ToString(1);
+}
+
+Boxx::String StructValue::ToString(Boxx::UInt indent) const {
 	Boxx::StringBuilder builder;
 	builder += "{\n";
 
 	for (const Boxx::Tuple<Type, Boxx::String>& name : program->structs[type.name]->vars) {
-		builder += "  ";
+		builder += Boxx::String("  ").Repeat(indent);
 		builder += name.value2;
 		builder += " = ";
 		
 		if (Weak<Value> value = GetValue(name.value2)) {
-			builder += value->ToString();
+			if (Weak<StructValue> sv = value.As<StructValue>()) {
+				builder += sv->ToString(indent + 1);
+			}
+			else {
+				builder += value->ToString();
+			}
 		}
 		else {
 			builder += "null";
@@ -41,6 +50,7 @@ Boxx::String StructValue::ToString() const {
 		builder += '\n';
 	}
 
+	builder += Boxx::String("  ").Repeat(indent - 1);
 	builder += '}';
 
 	return builder.ToString();

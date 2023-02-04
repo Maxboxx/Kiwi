@@ -13,6 +13,9 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			builder += "unknown value";
 		}
+
+		/// Copies the value.
+		virtual Ptr<Value> CopyValue() const = 0;
 	};
 
 	/// A Kiwi variable.
@@ -23,6 +26,10 @@ namespace Kiwi {
 
 		Variable(const Boxx::String& name) {
 			this->name = name;
+		}
+
+		virtual Ptr<Value> CopyValue() const override final {
+			return Copy();
 		}
 
 		/// Copies the variable.
@@ -94,6 +101,10 @@ namespace Kiwi {
 			this->var = var;
 		}
 
+		virtual Ptr<Value> CopyValue() const override {
+			return new RefValue(var->Copy());
+		} 
+
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
@@ -106,6 +117,10 @@ namespace Kiwi {
 
 		Integer(const Boxx::Long value) {
 			this->value = value;
+		}
+
+		virtual Ptr<Value> CopyValue() const override {
+			return new Integer(value);
 		}
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;

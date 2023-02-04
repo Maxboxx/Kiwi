@@ -322,6 +322,7 @@ namespace Kiwi {
 			}
 
 			virtual Boxx::String ToString() const;
+			virtual Boxx::String ToString(Boxx::UInt indent) const;
 		};
 
 		/// A pointer value.

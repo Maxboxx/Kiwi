@@ -27,9 +27,13 @@ void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 	Ptr<Interpreter::Value> value = expression->Evaluate(data);
 
+	if (!value) {
+		throw Interpreter::KiwiInterpretError("invalid assign expression");
+	}
+
 	if (subVar) {
 		Weak<Interpreter::StructValue> struct_ = subVar->var->EvaluateRef(data).As<Interpreter::StructValue>();
-
+		
 		if (struct_) {
 			struct_->SetValue(subVar->name, value);
 		}
@@ -92,7 +96,7 @@ IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::String& labe
 	this->falseLabel = nullptr;
 }
 
-IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::String& trueLabel, const Boxx::String& falseLabel) {
+IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::Optional<Boxx::String>& trueLabel, const Boxx::Optional<Boxx::String>& falseLabel) {
 	this->condition  = condition;
 	this->trueLabel  = trueLabel;
 	this->falseLabel = falseLabel;
@@ -103,10 +107,14 @@ void IfInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 	if (Weak<Interpreter::Integer> integer = value.As<Interpreter::Integer>()) {
 		if (integer->ToLong() != 0) {
-			data.gotoLabel = trueLabel;
+			if (trueLabel) {
+				data.gotoLabel = *trueLabel;
+			}
 		}
-		else if (falseLabel) {
-			data.gotoLabel = *falseLabel;
+		else {
+			if (falseLabel) {
+				data.gotoLabel = *falseLabel;
+			}
 		}
 	}
 	else {
@@ -118,7 +126,13 @@ void IfInstruction::BuildString(Boxx::StringBuilder& builder) {
 	builder += "if ";
 	condition->BuildString(builder);
 	builder += ": ";
-	builder += Name::ToKiwi(trueLabel);
+
+	if (trueLabel) {
+		builder += Name::ToKiwi(*trueLabel);
+	}
+	else {
+		builder += '_';
+	}
 
 	if (falseLabel) {
 		builder += ", ";

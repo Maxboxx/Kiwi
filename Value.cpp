@@ -1,4 +1,5 @@
 #include "Value.h"
+#include "KiwiProgram.h"
 
 using namespace Boxx;
 
@@ -17,6 +18,17 @@ Weak<Interpreter::Value> SubVariable::EvaluateRef(Interpreter::InterpreterData& 
 
 	if (struct_->data.Contains(name)) {
 		return struct_->data[name].As<Interpreter::StructValue>();
+	}
+
+	if (struct_->type.pointers == 0 && data.program->structs.Contains(struct_->type.name)) {
+		Weak<Struct> s = data.program->structs[struct_->type.name];
+
+		for (const Tuple<Type, String>& var : s->vars) {
+			if (var.value2 == name) {
+				struct_->data.Add(name, new Interpreter::StructValue(var.value1, data.program));
+				return struct_->data[name].As<Interpreter::StructValue>();
+			}
+		}
 	}
 	
 	return nullptr;

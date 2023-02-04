@@ -123,13 +123,13 @@ namespace Kiwi {
 		Ptr<Expression> condition;
 
 		/// The label to use if the condition is true.
-		Boxx::String trueLabel;
+		Boxx::Optional<Boxx::String> trueLabel;
 
 		/// The label to use if the condition is false
 		Boxx::Optional<Boxx::String> falseLabel;
 
 		IfInstruction(Ptr<Expression> condition, const Boxx::String& label);
-		IfInstruction(Ptr<Expression> condition, const Boxx::String& trueLabel, const Boxx::String& falseLabel);
+		IfInstruction(Ptr<Expression> condition, const Boxx::Optional<Boxx::String>& trueLabel, const Boxx::Optional<Boxx::String>& falseLabel);
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
