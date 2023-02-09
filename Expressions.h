@@ -3,6 +3,8 @@
 #include "Ptr.h"
 #include "Node.h"
 
+#include "Boxx/Boxx/Array.h"
+
 ///N Kiwi
 
 namespace Kiwi {
@@ -57,6 +59,7 @@ namespace Kiwi {
 		}
 
 		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		Boxx::Array<Ptr<Interpreter::Value>> EvaluateAll(Interpreter::InterpreterData& data);
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 

@@ -10,6 +10,16 @@ using namespace Boxx;
 using namespace Kiwi;
 
 Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Array<Ptr<Interpreter::Value>> ret = EvaluateAll(data);
+
+	if (ret.Length() > 0) {
+		return ret[0];
+	}
+
+	return nullptr;
+}
+
+Array<Ptr<Interpreter::Value>> CallExpression::EvaluateAll(Interpreter::InterpreterData& data) {
 	Weak<Function> function = data.program->functions[func];
 
 	Array<Ptr<Interpreter::Value>> argValues(args.Count());
@@ -33,10 +43,10 @@ Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& d
 
 	function->block->Interpret(data);
 
-	Ptr<Interpreter::Value> ret = nullptr;
-	
-	if (function->returnValues.Count() > 0) {
-		ret = data.frame->GetVarValueCopy(function->returnValues[0].value2);
+	Array<Ptr<Interpreter::Value>> ret = Array<Ptr<Interpreter::Value>>(function->returnValues.Count());
+
+	for (UInt i = 0; i < function->returnValues.Count(); i++) {
+		ret[i] = data.frame->GetVarValueCopy(function->returnValues[i].value2);
 	}
 
 	data.PopFrame();

@@ -8,73 +8,171 @@ using namespace Boxx;
 
 using namespace Kiwi;
 
-void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
-	Weak<SubVariable> subVar = var.As<SubVariable>();
+Ptr<MultiAssignInstruction> AssignInstruction::ToMultiAssign() {
+	Ptr<MultiAssignInstruction> assign;
 
-	if (type && !subVar) {
-		data.frame->CreateVariable(var->name, *type);
+	List<Ptr<Variable>> vars;
+	vars.Add(var->Copy());
+
+	List<Ptr<Expression>> expressions;
+
+	if (expression) {
+		expressions.Add(expression);
 	}
 
-	if (!expression) {
-		if (!type) {
-			throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var->name + "'");
-		}
-		else {
-			data.frame->SetVarValue(var->name, new Interpreter::StructValue(*type, data.program));
-			return;
-		}
-	}
-
-	Ptr<Interpreter::Value> value = expression->Evaluate(data);
-
-	if (!value) {
-		throw Interpreter::KiwiInterpretError("invalid assign expression");
-	}
-
-	if (subVar) {
-		Weak<Interpreter::StructValue> struct_ = subVar->var->EvaluateRef(data).As<Interpreter::StructValue>();
-		
-		if (struct_) {
-			struct_->SetValue(subVar->name, value);
-		}
-		else {
-			throw Interpreter::KiwiInterpretError("struct assign error");
-		}
-	}
-	else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
-		Weak<Interpreter::Value> ptr = deref->EvaluateRef(data);
-
-		if (!ptr->SetValue(value)) {
-			throw Interpreter::KiwiInterpretError("deref assign error");
-		}
+	if (type) {
+		List<Optional<Type>> types;
+		types.Add(type);
+		assign = new MultiAssignInstruction(types, vars, expressions);
 	}
 	else {
-		data.frame->SetVarValue(var->name, value);
+		assign = new MultiAssignInstruction(vars, expressions);
+	}
+
+	return assign;
+}
+
+void AssignInstruction::FreeMultiAssign(Ptr<MultiAssignInstruction> assign) {
+	if (assign->expressions.Count() > 0) {
+		expression = assign->expressions[0];
 	}
 }
 
+void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Ptr<MultiAssignInstruction> assign = ToMultiAssign();
+	assign->Interpret(data);
+	FreeMultiAssign(assign);
+}
+
 void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
-	if (type) {
-		builder += (*type).ToKiwi();
+	Ptr<MultiAssignInstruction> assign = ToMultiAssign();
+	assign->BuildString(builder);
+	FreeMultiAssign(assign);
+}
+
+void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Array<Ptr<Interpreter::Value>> extraValues;
+
+	for (UInt i = 0; i < vars.Count(); i++) {
+		Optional<Type> type = nullptr;
+		
+		if (types.Count() > 0) {
+			type = types.Count() == 1 ? types[0] : types[i];
+		}
+
+		Weak<Variable> var = vars[i];
+		Weak<SubVariable> subVar = var.As<SubVariable>();
+
+		Weak<Expression> expression = nullptr;
+
+		if (expressions.Count() > 0) {
+			if (i < expressions.Count()) {
+				expression = expressions[i];
+			}
+			else {
+				expression = expressions.Last();
+			}
+		}
+
+		if (type && !subVar) {
+			data.frame->CreateVariable(var->name, *type);
+		}
+
+		if (!expression) {
+			if (!type) {
+				throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var->name + "'");
+			}
+			else {
+				data.frame->SetVarValue(var->name, new Interpreter::StructValue(*type, data.program));
+				return;
+			}
+		}
+
+		Ptr<Interpreter::Value> value;
+		
+		if (i < expressions.Count()) {
+			if (i == expressions.Count() - 1 && expression.Is<CallExpression>()) {
+				extraValues = expression.As<CallExpression>()->EvaluateAll(data);
+
+				if (extraValues.Length() > 0) {
+					value = extraValues[0];
+				}
+			}
+			else {
+				value = expression->Evaluate(data);
+			}
+		}
+		else if (extraValues.Length() > expressions.Count() - i) {
+			value = extraValues[expressions.Count() - i + 1];
+		}
+
+		if (!value) {
+			throw Interpreter::KiwiInterpretError("invalid assign expression");
+		}
+
+		if (subVar) {
+			Weak<Interpreter::StructValue> struct_ = subVar->var->EvaluateRef(data).As<Interpreter::StructValue>();
+
+			if (struct_) {
+				struct_->SetValue(subVar->name, value);
+			}
+			else {
+				throw Interpreter::KiwiInterpretError("struct assign error");
+			}
+		}
+		else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
+			Weak<Interpreter::Value> ptr = deref->EvaluateRef(data);
+
+			if (!ptr->SetValue(value)) {
+				throw Interpreter::KiwiInterpretError("deref assign error");
+			}
+		}
+		else {
+			data.frame->SetVarValue(var->name, value);
+		}
+	}
+}
+
+void MultiAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
+	if (types.Count() > 0) {
+		for (UInt i = 0; i < types.Count(); i++) {
+			if (i > 0) builder += ", ";
+
+			if (Optional<Type> type = types[i]) {
+				builder += type->ToKiwi();
+			}
+			else {
+				builder += '_';
+			}
+		}
+
 		builder += ": ";
 	}
 
-	if (var) {
-		var->BuildString(builder);
+	for (UInt i = 0; i < vars.Count(); i++) {
+		if (i > 0) builder += ", ";
+
+		if (Weak<Variable> var = vars[i]) {
+			var->BuildString(builder);
+		}
+		else {
+			builder += "invalid variable";
+		}
 	}
-	else {
-		builder += "invalid variable";
-	}
-	
-	if (type && !expression) return;
+
+	if (expressions.IsEmpty()) return;
 
 	builder += " = ";
 
-	if (expression) {
-		expression->BuildString(builder);
-	}
-	else {
-		builder += "invalid expression";
+	for (UInt i = 0; i < expressions.Count(); i++) {
+		if (i > 0) builder += ", ";
+
+		if (Weak<Expression> expression = expressions[i]) {
+			expression->BuildString(builder);
+		}
+		else {
+			builder += "invalid expression";
+		}
 	}
 }
 

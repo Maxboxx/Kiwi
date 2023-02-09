@@ -34,6 +34,8 @@ namespace Kiwi {
 		}
 	};
 
+	class MultiAssignInstruction;
+
 	/// An assignment instruction.
 	class AssignInstruction : public Instruction {
 	public:
@@ -68,6 +70,38 @@ namespace Kiwi {
 			this->type = type;
 			this->var  = var;
 			this->expression = expression;
+		}
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+
+	private:
+		Ptr<MultiAssignInstruction> ToMultiAssign();
+		void FreeMultiAssign(Ptr<MultiAssignInstruction> assign);
+	};
+
+	/// A multi assignment instruction.
+	class MultiAssignInstruction : public Instruction {
+	public:
+		/// The types of the variables.
+		Boxx::List<Boxx::Optional<Kiwi::Type>> types;
+
+		/// The variable to assign to.
+		Boxx::List<Ptr<Variable>> vars;
+
+		/// The assign expression.
+		Boxx::List<Ptr<Expression>> expressions;
+
+		MultiAssignInstruction(const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Ptr<Expression>>& expressions) {
+			this->types = Boxx::List<Boxx::Optional<Kiwi::Type>>();
+			this->vars  = vars;
+			this->expressions = expressions;
+		}
+
+		MultiAssignInstruction(const Boxx::List<Boxx::Optional<Kiwi::Type>>& types, const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Ptr<Expression>>& expressions) {
+			this->types = types;
+			this->vars  = vars;
+			this->expressions = expressions;
 		}
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;
