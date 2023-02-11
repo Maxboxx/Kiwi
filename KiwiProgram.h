@@ -18,6 +18,9 @@ namespace Kiwi {
 	/// The root node for kiwi programs.
 	class KiwiProgram : public Node {
 	public:
+		/// The byte size for pointers.
+		static const Boxx::UInt ptrSize = 8;
+
 		/// All code blocks.
 		Boxx::List<Ptr<CodeBlock>> blocks;
 
