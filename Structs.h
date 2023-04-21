@@ -42,7 +42,7 @@ namespace Kiwi {
 
 		Type() : pointers(0), name("") {}
 		explicit Type(const Boxx::String& type) : pointers(0), name(type) {}
-		Type(Boxx::UInt pointer, const Boxx::String& type) : pointers(pointers), name(type) {}
+		Type(Boxx::UInt pointers, const Boxx::String& type) : pointers(pointers), name(type) {}
 		~Type() {}
 
 		/// Converts the type to kiwi.

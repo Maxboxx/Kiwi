@@ -117,6 +117,27 @@ namespace Kiwi {
 			}
 		};
 
+		/// The memory heap.
+		class Heap {
+		public:
+			Boxx::UInt next = 0;
+			Boxx::Map<Boxx::UInt, Ptr<Value>> values;
+
+			virtual ~Heap() {}
+
+			/// Allocates a value on the heap.
+			Boxx::UInt Alloc(Ptr<Value> value) {
+				next++;
+				values.Add(next, value);
+				return next;
+			}
+
+			/// Frees up the value at the given address.
+			void Free(Boxx::UInt address) {
+				values.Remove(address);
+			}
+		};
+
 		/// Data used by the interpreter.
 		struct InterpreterData {
 			/// The current Kiwi program.
@@ -130,6 +151,9 @@ namespace Kiwi {
 
 			/// The current stack frame.
 			Weak<Frame> frame;
+
+			/// The heap.
+			Ptr<Heap> heap = new Heap();
 
 			~InterpreterData() {}
 
@@ -254,7 +278,7 @@ namespace Kiwi {
 		/// A 64-bit unsigned integer value.
 		typedef Int<Boxx::ULong>  UInt64;
 
-		/// An struct value.
+		/// A struct value.
 		class StructValue : public Value {
 		public:
 			/// The current kiwi program.

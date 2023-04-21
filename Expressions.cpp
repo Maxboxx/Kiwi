@@ -67,6 +67,18 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += ')';
 }
 
+Ptr<Interpreter::Value> AllocExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Ptr<Interpreter::StructValue> value = new Interpreter::StructValue(Kiwi::Type(type), data.program);
+	Weak<Interpreter::StructValue> weak = value;
+	UInt adr = data.heap->Alloc(value);
+	return new Interpreter::PtrValue(weak->type, weak);
+}
+
+void AllocExpression::BuildString(StringBuilder& builder) {
+	builder += "alloc ";
+	builder += Name::ToKiwi(type);
+}
+
 Ptr<Interpreter::Value> UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
 	Ptr<Interpreter::Value> a = value->Evaluate(data); 
 

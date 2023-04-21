@@ -63,6 +63,19 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	/// An alloc instruction.
+	class AllocExpression : public Expression {
+	public:
+		Boxx::String type;
+
+		AllocExpression(Boxx::String type) {
+			this->type = type;
+		}
+
+		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// A unary expression for numbers.
 	class UnaryNumberExpression : public UnaryExpression {
 	public:
