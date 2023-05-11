@@ -127,6 +127,10 @@ namespace Kiwi {
 	public:
 		ReturnInstruction() {}
 
+		virtual void Interpret(Interpreter::InterpreterData& data) override {
+			data.ret = true;
+		}
+
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			builder += "ret";
 		}

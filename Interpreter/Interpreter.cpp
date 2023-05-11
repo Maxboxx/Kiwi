@@ -22,10 +22,6 @@ void StructValue::SetValue(const Boxx::String& var, Ptr<Value> value) {
 	throw Interpreter::KiwiInterpretError("struct '" + type.ToKiwi() + "' has no member '" + var + "'");
 }
 
-Boxx::String StructValue::ToString() const {
-	return ToString(1);
-}
-
 Boxx::String StructValue::ToString(Boxx::UInt indent) const {
 	Boxx::StringBuilder builder;
 	builder += "{\n";
@@ -36,12 +32,7 @@ Boxx::String StructValue::ToString(Boxx::UInt indent) const {
 		builder += " = ";
 		
 		if (Weak<Value> value = GetValue(name.value2)) {
-			if (Weak<StructValue> sv = value.As<StructValue>()) {
-				builder += sv->ToString(indent + 1);
-			}
-			else {
-				builder += value->ToString();
-			}
+			builder += value->ToString(indent + 1);
 		}
 		else {
 			builder += "null";
@@ -56,6 +47,6 @@ Boxx::String StructValue::ToString(Boxx::UInt indent) const {
 	return builder.ToString();
 }
 
-Boxx::String PtrValue::ToString() const {
-	return '*' + value->ToString();
+Boxx::String PtrValue::ToString(Boxx::UInt indent) const {
+	return '*' + value->ToString(indent);
 }

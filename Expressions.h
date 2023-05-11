@@ -179,6 +179,7 @@ namespace Kiwi {
 		}
 
 		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			if (b == 0) throw Interpreter::KiwiInterpretError("div by zero");
 			return a / b;
 		}
 	};
@@ -191,6 +192,7 @@ namespace Kiwi {
 		}
 
 		virtual Boxx::Long Evaluate(Boxx::Long a, Boxx::Long b) override {
+			if (b == 0) throw Interpreter::KiwiInterpretError("mod by zero");
 			return a % b;
 		}
 	};

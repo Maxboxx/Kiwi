@@ -39,6 +39,12 @@ Array<Ptr<Interpreter::Value>> CallExpression::EvaluateAll(Interpreter::Interpre
 	for (int i = 0; i < function->returnValues.Count(); i++) {
 		Tuple<Type, String> value = function->returnValues[i];
 		data.frame->CreateVariable(value.value2, value.value1);
+
+		if (value.value1.pointers == 0) {
+			if (data.program->structs.Contains(value.value1.name)) {
+				data.frame->SetVarValue(value.value2, new Interpreter::StructValue(value.value1, data.program));
+			}
+		}
 	}
 
 	function->block->Interpret(data);

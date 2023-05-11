@@ -49,7 +49,13 @@ void CodeBlock::AddInstructionBlock(Ptr<InstructionBlock> block) {
 
 void CodeBlock::Interpret(Interpreter::InterpreterData& data) {
 	data.gotoLabel = nullptr;
+	data.ret = false;
 	mainBlock->Interpret(data);
+
+	if (data.ret) {
+		data.ret = false;
+		return;
+	}
 
 	if (!data.gotoLabel && blocks.Count() > 0) {
 		data.gotoLabel = blocks[0]->label;
@@ -63,6 +69,11 @@ void CodeBlock::Interpret(Interpreter::InterpreterData& data) {
 				found = true;
 				data.gotoLabel = nullptr;
 				blocks[i]->Interpret(data);
+
+				if (data.ret) {
+					data.ret = false;
+					return;
+				}
 
 				if (!data.gotoLabel && i + 1 < blocks.Count()) {
 					data.gotoLabel = blocks[i + 1]->label;
@@ -100,6 +111,8 @@ void InstructionBlock::Interpret(Interpreter::InterpreterData& data) {
 		}
 
 		instruction->Interpret(data);
+
+		if (data.ret) break;
 	}
 }
 

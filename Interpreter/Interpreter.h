@@ -35,7 +35,7 @@ namespace Kiwi {
 			virtual Type GetType() const = 0;
 
 			/// Converts the value to a string.
-			virtual Boxx::String ToString() const = 0;
+			virtual Boxx::String ToString(Boxx::UInt indent = 1) const = 0;
 		};
 
 		/// Error for interpreting.
@@ -155,6 +155,9 @@ namespace Kiwi {
 			/// The heap.
 			Ptr<Heap> heap = new Heap();
 
+			/// Used by functions.
+			bool ret = false;
+
 			~InterpreterData() {}
 
 			/// Pushes a new stack frame.
@@ -213,7 +216,7 @@ namespace Kiwi {
 				return new Int<T>((T)value);
 			}
 
-			virtual Boxx::String ToString() const override {
+			virtual Boxx::String ToString(Boxx::UInt indent) const override {
 				return Boxx::String::ToString(value);
 			}
 
@@ -345,8 +348,7 @@ namespace Kiwi {
 				return type;
 			}
 
-			virtual Boxx::String ToString() const;
-			virtual Boxx::String ToString(Boxx::UInt indent) const;
+			virtual Boxx::String ToString(Boxx::UInt indent) const override;
 		};
 
 		/// A pointer value.
@@ -383,7 +385,7 @@ namespace Kiwi {
 				return type;
 			}
 
-			virtual Boxx::String ToString() const;
+			virtual Boxx::String ToString(Boxx::UInt indent) const override;
 		};
 	}
 }
