@@ -5,85 +5,55 @@ using namespace Boxx;
 
 using namespace Kiwi;
 
-Weak<Interpreter::Value> Variable::EvaluateRef(Interpreter::InterpreterData& data) const {
-	return data.frame->GetVarValue(name);
+Interpreter::DataPtr Variable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	return data.frame->GetVarValue(name).Ptr();
 }
 
-Ptr<Interpreter::Value> Variable::Evaluate(Interpreter::InterpreterData& data) {
+Interpreter::Data Variable::Evaluate(Interpreter::InterpreterData& data) {
 	return data.frame->GetVarValueCopy(name);
 }
 
-Weak<Interpreter::Value> SubVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
-	Weak<Interpreter::StructValue> struct_ = var->EvaluateRef(data).As<Interpreter::StructValue>();
-
-	if (struct_->data.Contains(name)) {
-		return struct_->data[name].As<Interpreter::StructValue>();
+Type SubVariable::GetType(Interpreter::InterpreterData& data) const {
+	if (!data.program->structs.Contains(var->GetType(data).name)) {
+		return Type();
 	}
 
-	if (struct_->type.pointers == 0 && data.program->structs.Contains(struct_->type.name)) {
-		Weak<Struct> s = data.program->structs[struct_->type.name];
-
-		for (const Tuple<Type, String>& var : s->vars) {
-			if (var.value2 == name) {
-				struct_->data.Add(name, new Interpreter::StructValue(var.value1, data.program));
-				return struct_->data[name].As<Interpreter::StructValue>();
-			}
-		}
-	}
-	
-	return nullptr;
+	return data.program->structs[var->GetType(data).name]->VarType(name);
 }
 
-Ptr<Interpreter::Value> SubVariable::Evaluate(Interpreter::InterpreterData& data) {
-	Ptr<Interpreter::StructValue> var = this->var->Evaluate(data).AsPtr<Interpreter::StructValue>();
+Interpreter::DataPtr SubVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	Interpreter::DataPtr struct_ = var->EvaluateRef(data);
 
-	if (var) {
-		Weak<Interpreter::Value> value = var->GetValue(name);
+	Type type = var->GetType(data);
 
-		if (value) {
-			return value->Copy();
-		}
+	if (data.program->structs.Contains(type.name)) {
+		return struct_ + data.program->structs[type.name]->VarOffset(name, data.program);
 	}
 
 	return nullptr;
 }
 
-Weak<Interpreter::Value> DerefVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
-	Weak<Interpreter::PtrValue> ptr = data.frame->GetVarValue(name).As<Interpreter::PtrValue>();
-
-	if (ptr) {
-		return ptr->value;
-	}
-
-	return nullptr;
+Interpreter::Data SubVariable::Evaluate(Interpreter::InterpreterData& data) {
+	return this->var->Evaluate(data);
 }
 
-Ptr<Interpreter::Value> DerefVariable::Evaluate(Interpreter::InterpreterData& data) {
-	Weak<Interpreter::PtrValue> ptr = data.frame->GetVarValue(name).As<Interpreter::PtrValue>();
-
-	if (ptr) {
-		return ptr->value->Copy();
-	}
-
-	return nullptr;
+Interpreter::DataPtr DerefVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
+	return data.frame->GetVarValue(name).Get<Interpreter::DataPtr>();
 }
 
-Ptr<Interpreter::Value> RefValue::Evaluate(Interpreter::InterpreterData& data) {
+Interpreter::Data DerefVariable::Evaluate(Interpreter::InterpreterData& data) {
+	return data.frame->GetVarValue(name);
+}
+
+Interpreter::Data RefValue::Evaluate(Interpreter::InterpreterData& data) {
 	if (!var) {
 		throw Interpreter::KiwiInterpretError("invalid value to reference");
 	}
 
-	Weak<Interpreter::Value> value = var->EvaluateRef(data);
-
-	if (!value) {
-		StringBuilder builder;
-		var->BuildString(builder);
-		throw Interpreter::KiwiInterpretError("can not reference '" + builder.ToString() + "'");
-	}
-
-	Type type = value->GetType();
-	type.pointers++;
-	return new Interpreter::PtrValue(type, value);
+	Interpreter::DataPtr value = var->EvaluateRef(data);
+	Interpreter::Data d = Interpreter::Data(KiwiProgram::ptrSize);
+	d.Set(value);
+	return d;
 }
 
 void RefValue::BuildString(StringBuilder& builder) {
@@ -97,6 +67,6 @@ void RefValue::BuildString(StringBuilder& builder) {
 	}
 }
 
-Ptr<Interpreter::Value> Integer::Evaluate(Interpreter::InterpreterData& data) {
-	return new Interpreter::Int64(value);
+Interpreter::Data Integer::Evaluate(Interpreter::InterpreterData& data) {
+	return Interpreter::Data::Number(Type::SizeOf(type, data.program), value);
 }

@@ -8,6 +8,8 @@
 ///N Kiwi
 
 namespace Kiwi {
+	class KiwiProgram;
+
 	/// Utility class for kiwi names.
 	class Name final {
 	public:
@@ -65,5 +67,8 @@ namespace Kiwi {
 
 			return name < type.name;
 		}
+
+		/// Gets the size of the specified type.
+		static Boxx::UInt SizeOf(Type type, Weak<KiwiProgram> program);
 	};
 }

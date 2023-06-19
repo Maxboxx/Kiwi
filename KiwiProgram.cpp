@@ -198,6 +198,36 @@ void Struct::AddVariable(const Type& type, const String& var) {
 	vars.Add(Tuple<>::Create(type, var));
 }
 
+UInt Struct::Size(Weak<KiwiProgram> program) {
+	UInt size = 0;
+
+	for (UInt i = 0; i < vars.Count(); i++) {
+		size += Type::SizeOf(vars[i].value1, program);
+	}
+
+	return size;
+}
+
+UInt Struct::VarOffset(String var, Weak<KiwiProgram> program) {
+	UInt size = 0;
+
+	for (UInt i = 0; i < vars.Count(); i++) {
+		if (vars[i].value2 == var) return size;
+
+		size += Type::SizeOf(vars[i].value1, program);
+	}
+
+	return size;
+}
+
+Type Struct::VarType(String var) {
+	for (UInt i = 0; i < vars.Count(); i++) {
+		if (vars[i].value2 == var) return vars[i].value1;
+	}
+
+	return Type();
+}
+
 void Struct::BuildString(StringBuilder& builder) {
 	builder += "struct ";
 	builder += Name::ToKiwi(name);

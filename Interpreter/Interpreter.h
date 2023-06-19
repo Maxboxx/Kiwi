@@ -16,6 +16,92 @@ namespace Kiwi {
 	class KiwiProgram;
 
 	namespace Interpreter {
+		using Byte    = unsigned char;
+		using DataPtr = Byte*;
+
+		/// Interpreter data.
+		struct Data {
+		public:
+			Data() {
+				
+			}
+
+			/// Creates data of specified size.
+			Data(Boxx::UInt size) {
+				data = Boxx::Array<Byte>(size);
+			}
+
+			~Data() {
+				
+			}
+
+			/// Copies the data.
+			Data Copy() const {
+				Data copy = Data(data.Length());
+				std::memcpy((DataPtr)copy.data, (DataPtr)data, data.Length() * sizeof(Byte));
+				return copy;
+			}
+
+			/// Gets the data pointer.
+			DataPtr Ptr() const {
+				return (DataPtr)data;
+			}
+
+			/// The size of the data.
+			Boxx::UInt Size() const {
+				return data.Length();
+			}
+
+			Boxx::ULong GetNumber(Boxx::UInt size) {
+				switch (size) {
+					case 1:  return Get<Boxx::Byte>();
+					case 2:  return Get<Boxx::Short>();
+					case 4:  return Get<Boxx::Int>();
+					default: return Get<Boxx::Long>();
+				}
+			}
+
+			static Data Number(Boxx::UInt size, Boxx::Long num) {
+				Data data = Data(size);
+				
+				switch (size) {
+					case 1:  data.Set<Boxx::Byte>(num);  break;
+					case 2:  data.Set<Boxx::Short>(num); break;
+					case 4:  data.Set<Boxx::Int>(num);   break;
+					default: data.Set<Boxx::Long>(num);  break;
+				}
+
+				return data;
+			}
+
+			template <class T>
+			static void Set(DataPtr d, T t) {
+				*(T*)d = t;
+			}
+
+			template <class T>
+			void Set(T t) {
+				Set(Ptr(), t);
+			}
+
+			static void Set(DataPtr ptr, Data data) {
+				std::memcpy(ptr, data.Ptr(), data.data.Length() * sizeof(Interpreter::Byte));
+			}
+
+			template <class T>
+			static T Get(DataPtr d) {
+				return *(T*)d;
+			}
+
+			template <class T>
+			T Get() {
+				return Get<T>(Ptr());
+			}
+
+		private:
+			Boxx::Array<Byte> data;
+		};
+
 		/// Base for interpreter values.
 		class Value {
 		public:
@@ -52,13 +138,13 @@ namespace Kiwi {
 		/// A stack frame.
 		class Frame {
 		public:
-			Boxx::Map<Boxx::String, Type> varTypes;
-			Boxx::Map<Boxx::String, Ptr<Value>> variables;
+			Boxx::Map<Boxx::String, Kiwi::Type> varTypes;
+			Boxx::Map<Boxx::String, Data> variables;
 
 			virtual ~Frame() {}
 
 			/// Gets the value of the specified variable.
-			Weak<Value> GetVarValue(const Boxx::String& var) {
+			Data GetVarValue(const Boxx::String& var) {
 				if (!variables.Contains(var)) {
 					throw KiwiInterpretError("Variable '" + var + "' does not have a value");
 				}
@@ -67,31 +153,21 @@ namespace Kiwi {
 			}
 
 			/// Gets a copy of the value for the specified variable.
-			Ptr<Value> GetVarValueCopy(const Boxx::String& var) {
+			Data GetVarValueCopy(const Boxx::String& var) {
 				if (!variables.Contains(var)) {
 					throw KiwiInterpretError("Variable '" + var + "' does not have a value");
 				}
 
-				return variables[var]->Copy();
+				return variables[var].Copy();
 			}
 
 			/// Sets the value of a variable.
-			void SetVarValue(const Boxx::String& var, Ptr<Value> value) {
+			void SetVarValue(const Boxx::String& var, Data value) {
 				if (!varTypes.Contains(var)) {
 					throw KiwiInterpretError("Variable '" + var + "' does not exist");
 				}
 
-				if (!value) {
-					throw KiwiInterpretError("Invalid value to assign to '" + var + "'");
-				}
-
-				Ptr<Value> converted = value->ConvertTo(varTypes[var]);
-				
-				if (!converted) {
-					throw KiwiInterpretError("Could not assign value of type " + value->GetType().ToKiwi() + " to '" + var + "', " + varTypes[var].ToKiwi() + " expected");
-				}
-
-				variables.Set(var, converted);
+				variables.Set(var, value);
 			}
 
 			/// Gets the type of a variable.
@@ -120,21 +196,36 @@ namespace Kiwi {
 		/// The memory heap.
 		class Heap {
 		public:
-			Boxx::UInt next = 0;
-			Boxx::Map<Boxx::UInt, Ptr<Value>> values;
+			Boxx::Map<DataPtr, Data> values;
 
 			virtual ~Heap() {}
 
-			/// Allocates a value on the heap.
-			Boxx::UInt Alloc(Ptr<Value> value) {
-				next++;
-				values.Add(next, value);
-				return next;
+			/// Allocates data on the heap.
+			Data Alloc(Boxx::UInt size) {
+				Data data = Data(size);
+				values.Add(data.Ptr(), data);
+				return data;
+			}
+
+			/// Frees up the given data.
+			void Free(Data data) {
+				values.Remove(data.Ptr());
 			}
 
 			/// Frees up the value at the given address.
-			void Free(Boxx::UInt address) {
-				values.Remove(address);
+			void Free(DataPtr data) {
+				values.Remove(data);
+			}
+
+			/// True if the specified pointer has been allocated.
+			bool IsAllocated(DataPtr ptr) {
+				return values.Contains(ptr);
+			}
+
+			/// Gets the size of the specified pointer.
+			Boxx::UInt GetSize(DataPtr ptr) {
+				if (!IsAllocated(ptr)) return 0;
+				return values[ptr].Size();
 			}
 		};
 

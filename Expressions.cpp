@@ -9,20 +9,27 @@ using namespace Boxx;
 
 using namespace Kiwi;
 
-Ptr<Interpreter::Value> CallExpression::Evaluate(Interpreter::InterpreterData& data) {
-	Array<Ptr<Interpreter::Value>> ret = EvaluateAll(data);
+Type CallExpression::GetType(Interpreter::InterpreterData& data) const {
+	Weak<Function> function = data.program->functions[func];
+
+	if (function->returnValues.IsEmpty()) return Type();
+	return function->returnValues[0].value1;
+}
+
+Interpreter::Data CallExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Array<Interpreter::Data> ret = EvaluateAll(data);
 
 	if (ret.Length() > 0) {
 		return ret[0];
 	}
 
-	return nullptr;
+	return Interpreter::Data();
 }
 
-Array<Ptr<Interpreter::Value>> CallExpression::EvaluateAll(Interpreter::InterpreterData& data) {
+Array<Interpreter::Data> CallExpression::EvaluateAll(Interpreter::InterpreterData& data) {
 	Weak<Function> function = data.program->functions[func];
 
-	Array<Ptr<Interpreter::Value>> argValues(args.Count());
+	Array<Interpreter::Data> argValues(args.Count());
 
 	for (int i = 0; i < args.Count(); i++) {
 		argValues[i] = args[i]->Evaluate(data);
@@ -42,14 +49,14 @@ Array<Ptr<Interpreter::Value>> CallExpression::EvaluateAll(Interpreter::Interpre
 
 		if (value.value1.pointers == 0) {
 			if (data.program->structs.Contains(value.value1.name)) {
-				data.frame->SetVarValue(value.value2, new Interpreter::StructValue(value.value1, data.program));
+				data.frame->SetVarValue(value.value2, Interpreter::Data(Type::SizeOf(value.value1, data.program)));
 			}
 		}
 	}
 
 	function->block->Interpret(data);
 
-	Array<Ptr<Interpreter::Value>> ret = Array<Ptr<Interpreter::Value>>(function->returnValues.Count());
+	Array<Interpreter::Data> ret = Array<Interpreter::Data>(function->returnValues.Count());
 
 	for (UInt i = 0; i < function->returnValues.Count(); i++) {
 		ret[i] = data.frame->GetVarValueCopy(function->returnValues[i].value2);
@@ -73,26 +80,42 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += ')';
 }
 
-Ptr<Interpreter::Value> AllocExpression::Evaluate(Interpreter::InterpreterData& data) {
-	Ptr<Interpreter::StructValue> value = new Interpreter::StructValue(Kiwi::Type(type), data.program);
-	Weak<Interpreter::StructValue> weak = value;
-	UInt adr = data.heap->Alloc(value);
-	return new Interpreter::PtrValue(weak->type, weak);
+Type AllocExpression::GetType(Interpreter::InterpreterData& data) const {
+	Type type = this->type.ValueOr(Type());
+	type.pointers++;
+	return type;
+}
+
+Interpreter::Data AllocExpression::Evaluate(Interpreter::InterpreterData& data) {
+	UInt size = this->size;
+
+	if (type) {
+		size = Type::SizeOf(Type(*type), data.program);
+	}
+
+	Interpreter::DataPtr ptr = data.heap->Alloc(size).Ptr();
+	Interpreter::Data value  = Interpreter::Data(KiwiProgram::ptrSize);
+	value.Set(ptr);
+	return value;
 }
 
 void AllocExpression::BuildString(StringBuilder& builder) {
 	builder += "alloc ";
-	builder += Name::ToKiwi(type);
+
+	if (type) {
+		builder += type->ToKiwi();
+	}
+	else {
+		builder += String::ToString(size);
+	}
 }
 
-Ptr<Interpreter::Value> UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
-	Ptr<Interpreter::Value> a = value->Evaluate(data); 
+Type UnaryNumberExpression::GetType(Interpreter::InterpreterData& data) const {
+	return value->GetType(data);
+}
 
-	if (Weak<Interpreter::Integer> int1 = a.As<Interpreter::Integer>()) {
-		return new Interpreter::Int64(Evaluate(int1->ToLong()));
-	}
-
-	return nullptr;
+Interpreter::Data UnaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
+	return value->Evaluate(data);
 }
 
 void UnaryNumberExpression::BuildString(StringBuilder& builder) {
@@ -101,17 +124,23 @@ void UnaryNumberExpression::BuildString(StringBuilder& builder) {
 	value->BuildString(builder);
 }
 
-Ptr<Interpreter::Value> BinaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
-	Ptr<Interpreter::Value> a = value1->Evaluate(data); 
-	Ptr<Interpreter::Value> b = value2->Evaluate(data); 
+Type BinaryNumberExpression::GetType(Interpreter::InterpreterData& data) const {
+	Type t1 = value1->GetType(data);
+	Type t2 = value2->GetType(data);
+	return Type::SizeOf(t1, data.program) > Type::SizeOf(t2, data.program) ? t1 : t2;
+}
 
-	if (Weak<Interpreter::Integer> int1 = a.As<Interpreter::Integer>()) {
-		if (Weak<Interpreter::Integer> int2 = b.As<Interpreter::Integer>()) {
-			return new Interpreter::Int64(Evaluate(int1->ToLong(), int2->ToLong()));
-		}
-	}
+Interpreter::Data BinaryNumberExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Interpreter::Data a = value1->Evaluate(data); 
+	Interpreter::Data b = value2->Evaluate(data); 
 
-	return nullptr;
+	return Interpreter::Data::Number(
+		Type::SizeOf(GetType(data), data.program),
+		Evaluate(
+			a.GetNumber(Type::SizeOf(value1->GetType(data), data.program)),
+			b.GetNumber(Type::SizeOf(value2->GetType(data), data.program))
+		)
+	);
 }
 
 void BinaryNumberExpression::BuildString(StringBuilder& builder) {

@@ -36,11 +36,16 @@ namespace Kiwi {
 		virtual Ptr<Variable> Copy() const {
 			return new Variable(name);
 		}
+
+		/// Gets the type of the variable.
+		virtual Type GetType(Interpreter::InterpreterData& data) const override {
+			return data.frame->GetVarType(name);
+		}
 		
 		/// Gets the ref of the variable.
-		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const;
+		virtual Interpreter::DataPtr EvaluateRef(Interpreter::InterpreterData& data) const;
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			builder += Name::ToKiwi(name);
@@ -61,9 +66,11 @@ namespace Kiwi {
 			return new SubVariable(var->Copy(), name);
 		}
 
-		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Interpreter::DataPtr EvaluateRef(Interpreter::InterpreterData& data) const override;
+
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			var->BuildString(builder);
@@ -81,9 +88,15 @@ namespace Kiwi {
 			return new DerefVariable(name);
 		}
 
-		virtual Weak<Interpreter::Value> EvaluateRef(Interpreter::InterpreterData& data) const override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override {
+			Type t = Variable::GetType(data);
+			t.pointers--;
+			return t;
+		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Interpreter::DataPtr EvaluateRef(Interpreter::InterpreterData& data) const override;
+
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			builder += '*';
@@ -105,7 +118,13 @@ namespace Kiwi {
 			return new RefValue(var->Copy());
 		} 
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override {
+			Type t = var->GetType(data);
+			t.pointers++;
+			return t;
+		}
+
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
@@ -115,15 +134,23 @@ namespace Kiwi {
 		/// The integer value.
 		Boxx::Long value;
 
-		Integer(const Boxx::Long value) {
+		/// The integer type.
+		Type type;
+
+		Integer(Type type, const Boxx::Long value) {
+			this->type  = type;
 			this->value = value;
 		}
 
 		virtual Ptr<Value> CopyValue() const override {
-			return new Integer(value);
+			return new Integer(type, value);
 		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override {
+			return type;
+		}
+
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
 			builder += Boxx::String::ToString(value);

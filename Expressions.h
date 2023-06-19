@@ -18,9 +18,12 @@ namespace Kiwi {
 			throw Interpreter::KiwiInterpretError("Call Evaluate instead");
 		}
 
+		/// Gets the type of the expression.
+		virtual Type GetType(Interpreter::InterpreterData& data) const = 0;
+
 		/// Evaluates the expression.
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) {
-			return nullptr;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) {
+			return Interpreter::Data();
 		}
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override {
@@ -58,21 +61,28 @@ namespace Kiwi {
 			this->func = func;
 		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
-		Boxx::Array<Ptr<Interpreter::Value>> EvaluateAll(Interpreter::InterpreterData& data);
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
+		Boxx::Array<Interpreter::Data> EvaluateAll(Interpreter::InterpreterData& data);
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
 	/// An alloc instruction.
 	class AllocExpression : public Expression {
 	public:
-		Boxx::String type;
+		Boxx::UInt size;
+		Boxx::Optional<Type> type;
 
-		AllocExpression(Boxx::String type) {
+		AllocExpression(Boxx::UInt size) {
+			this->size = size;
+		}
+
+		AllocExpression(Type type) {
 			this->type = type;
 		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
@@ -84,7 +94,8 @@ namespace Kiwi {
 			this->value = value;
 		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 
 	protected:
@@ -102,7 +113,8 @@ namespace Kiwi {
 			this->value2 = value2;
 		}
 
-		virtual Ptr<Interpreter::Value> Evaluate(Interpreter::InterpreterData& data) override;
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 
 	protected:

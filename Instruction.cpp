@@ -51,7 +51,7 @@ void AssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 }
 
 void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
-	Array<Ptr<Interpreter::Value>> extraValues;
+	Array<Interpreter::Data> extraValues;
 
 	for (UInt i = 0; i < vars.Count(); i++) {
 		Optional<Type> type = nullptr;
@@ -83,12 +83,12 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 				throw Interpreter::KiwiInterpretError("invalid expression to assign to '" + var->name + "'");
 			}
 			else {
-				data.frame->SetVarValue(var->name, new Interpreter::StructValue(*type, data.program));
+				data.frame->SetVarValue(var->name, Interpreter::Data(Type::SizeOf(*type, data.program)));
 				return;
 			}
 		}
 
-		Ptr<Interpreter::Value> value;
+		Interpreter::Data value;
 		
 		if (i < expressions.Count()) {
 			if (i == expressions.Count() - 1 && expression.Is<CallExpression>()) {
@@ -106,26 +106,13 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 			value = extraValues[expressions.Count() - i + 1];
 		}
 
-		if (!value) {
-			throw Interpreter::KiwiInterpretError("invalid assign expression");
-		}
-
 		if (subVar) {
-			Weak<Interpreter::StructValue> struct_ = subVar->var->EvaluateRef(data).As<Interpreter::StructValue>();
-
-			if (struct_) {
-				struct_->SetValue(subVar->name, value);
-			}
-			else {
-				throw Interpreter::KiwiInterpretError("struct assign error");
-			}
+			Interpreter::DataPtr struct_ = subVar->EvaluateRef(data);
+			Interpreter::Data::Set(struct_, value);
 		}
 		else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
-			Weak<Interpreter::Value> ptr = deref->EvaluateRef(data);
-
-			if (!ptr->SetValue(value)) {
-				throw Interpreter::KiwiInterpretError("deref assign error");
-			}
+			Interpreter::DataPtr struct_ = subVar->EvaluateRef(data);
+			Interpreter::Data::Set(struct_, value);
 		}
 		else {
 			data.frame->SetVarValue(var->name, value);
@@ -176,6 +163,34 @@ void MultiAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 	}
 }
 
+void OffsetAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Interpreter::DataPtr ptr = var->EvaluateRef(data);
+
+	if (type) {
+		ptr += offset * Type::SizeOf(*type, data.program);
+	}
+	else {
+		ptr += offset;
+	}
+
+	Interpreter::Data::Set(ptr, expression->Evaluate(data));
+}
+
+void OffsetAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
+	var->BuildString(builder);
+	builder += '[';
+
+	if (type) {
+		builder += (*type).ToKiwi();
+		builder += ' ';
+	}
+
+	builder += String::ToString(offset);
+	builder += "] = ";
+
+	expression->BuildString(builder);
+}
+
 void CallInstruction::Interpret(Interpreter::InterpreterData& data) {
 	call->Evaluate(data);
 }
@@ -201,22 +216,17 @@ IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::Optional<Box
 }
 
 void IfInstruction::Interpret(Interpreter::InterpreterData& data) {
-	Ptr<Interpreter::Value> value = condition->Evaluate(data);
+	Interpreter::Data value = condition->Evaluate(data);
 
-	if (Weak<Interpreter::Integer> integer = value.As<Interpreter::Integer>()) {
-		if (integer->ToLong() != 0) {
-			if (trueLabel) {
-				data.gotoLabel = *trueLabel;
-			}
-		}
-		else {
-			if (falseLabel) {
-				data.gotoLabel = *falseLabel;
-			}
+	if (value.Get<Boxx::Long>() != 0) {
+		if (trueLabel) {
+			data.gotoLabel = *trueLabel;
 		}
 	}
 	else {
-		throw Interpreter::KiwiInterpretError("invalid condition");
+		if (falseLabel) {
+			data.gotoLabel = *falseLabel;
+		}
 	}
 }
 
@@ -239,12 +249,29 @@ void IfInstruction::BuildString(Boxx::StringBuilder& builder) {
 }
 
 void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
-	if (Ptr<Interpreter::Value> value = this->value->Evaluate(data)) {
-		Console::Print(value->ToString());
+	Interpreter::Data value = this->value->Evaluate(data);
+	Interpreter::DataPtr ptr = value.Ptr();
+
+	Type type = this->value->GetType(data);
+
+	UInt size = value.Size();
+
+	if (type.pointers > 0) {
+		Interpreter::DataPtr ptr2 = value.Get<Interpreter::DataPtr>();
+
+		if (data.heap->IsAllocated(ptr2)) {
+			Console::Write('*');
+			size = data.heap->GetSize(ptr2);
+			ptr = ptr2;
+		}
 	}
-	else {
-		Console::Print("null");
+
+	for (UInt i = 0; i < size; i++) {
+		Console::Write((UInt)ptr[i]);
+		Console::Write(' ');
 	}
+
+	Console::Print();
 }
 
 void DebugPrintInstruction::BuildString(StringBuilder& builder) {

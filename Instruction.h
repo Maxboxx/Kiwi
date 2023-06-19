@@ -40,7 +40,7 @@ namespace Kiwi {
 	class AssignInstruction : public Instruction {
 	public:
 		/// The type of the variable.
-		Boxx::Optional<Type> type;
+		Boxx::Optional<Kiwi::Type> type;
 
 		/// The variable to assign to.
 		Ptr<Variable> var;
@@ -54,7 +54,7 @@ namespace Kiwi {
 			this->expression = expression;
 		}
 
-		AssignInstruction(const Type& type, const Boxx::String& var, Ptr<Expression> expression) {
+		AssignInstruction(const Kiwi::Type& type, const Boxx::String& var, Ptr<Expression> expression) {
 			this->type = type;
 			this->var  = new Kiwi::Variable(var);
 			this->expression = expression;
@@ -66,7 +66,7 @@ namespace Kiwi {
 			this->expression = expression;
 		}
 
-		AssignInstruction(const Type& type, Ptr<Variable> var, Ptr<Expression> expression) {
+		AssignInstruction(const Kiwi::Type& type, Ptr<Variable> var, Ptr<Expression> expression) {
 			this->type = type;
 			this->var  = var;
 			this->expression = expression;
@@ -102,6 +102,32 @@ namespace Kiwi {
 			this->types = types;
 			this->vars  = vars;
 			this->expressions = expressions;
+		}
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
+	/// An assignment instruction to an offset.
+	class OffsetAssignInstruction : public Instruction {
+	public:
+		Ptr<Variable> var;
+		Ptr<Expression> expression;
+
+		Boxx::Optional<Type> type;
+		Boxx::UInt offset;
+
+		OffsetAssignInstruction(const Ptr<Variable> var, Ptr<Expression> expression, Boxx::UInt offset) {
+			this->var = var;
+			this->expression = expression;
+			this->offset = offset;
+		}
+
+		OffsetAssignInstruction(const Ptr<Variable> var, Ptr<Expression> expression, Type type, Boxx::UInt offset) {
+			this->var = var;
+			this->expression = expression;
+			this->type = type;
+			this->offset = offset;
 		}
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;

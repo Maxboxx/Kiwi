@@ -132,6 +132,15 @@ namespace Kiwi {
 		/// Adds a variable to the struct.
 		void AddVariable(const Type& type, const Boxx::String& var);
 
+		/// The byte size of the struct.
+		Boxx::UInt Size(Weak<KiwiProgram> program);
+
+		/// The byte offset to the specified variable.
+		Boxx::UInt VarOffset(Boxx::String var, Weak<KiwiProgram> program);
+
+		/// Gets the type of the specified variable.
+		Type VarType(Boxx::String var);
+
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 }
