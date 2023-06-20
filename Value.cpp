@@ -34,7 +34,8 @@ Interpreter::DataPtr SubVariable::EvaluateRef(Interpreter::InterpreterData& data
 }
 
 Interpreter::Data SubVariable::Evaluate(Interpreter::InterpreterData& data) {
-	return this->var->Evaluate(data);
+	Interpreter::Data d = var->Evaluate(data);
+	return Interpreter::Data(d.Ptr(), Type::SizeOf(GetType(data), data.program));
 }
 
 Interpreter::DataPtr DerefVariable::EvaluateRef(Interpreter::InterpreterData& data) const {
@@ -42,7 +43,8 @@ Interpreter::DataPtr DerefVariable::EvaluateRef(Interpreter::InterpreterData& da
 }
 
 Interpreter::Data DerefVariable::Evaluate(Interpreter::InterpreterData& data) {
-	return data.frame->GetVarValue(name);
+	Interpreter::DataPtr ptr = data.frame->GetVarValue(name).Get<Interpreter::DataPtr>();
+	return Interpreter::Data(ptr, Type::SizeOf(GetType(data), data.program));
 }
 
 Interpreter::Data RefValue::Evaluate(Interpreter::InterpreterData& data) {

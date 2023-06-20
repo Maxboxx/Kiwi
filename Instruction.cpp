@@ -218,7 +218,7 @@ IfInstruction::IfInstruction(Ptr<Expression> condition, const Boxx::Optional<Box
 void IfInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Interpreter::Data value = condition->Evaluate(data);
 
-	if (value.Get<Boxx::Long>() != 0) {
+	if (value.GetNumber(Type::SizeOf(condition->GetType(data), data.program)) != 0) {
 		if (trueLabel) {
 			data.gotoLabel = *trueLabel;
 		}
