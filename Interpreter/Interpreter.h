@@ -31,6 +31,12 @@ namespace Kiwi {
 				data = Boxx::Array<Byte>(size);
 			}
 
+			/// Create data from the specified pointer.
+			Data(DataPtr ptr, Boxx::UInt size) {
+				data = Boxx::Array<Byte>(size);
+				std::memcpy((DataPtr)data, ptr, size * sizeof(Byte));
+			}
+
 			~Data() {
 				
 			}

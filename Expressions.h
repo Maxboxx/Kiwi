@@ -86,6 +86,22 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	/// An offset expression.
+	class OffsetExpression : public Expression {
+	public:
+		Ptr<Variable> var;
+		Ptr<Value> offset;
+		Boxx::Optional<Type> offsetType;
+		Type type;
+
+		OffsetExpression(Ptr<Variable> var, Type type, Ptr<Value> offset);
+		OffsetExpression(Ptr<Variable> var, Type type, Type offsetType, Ptr<Value> offset);
+
+		virtual Type GetType(Interpreter::InterpreterData& data) const override;
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// A unary expression for numbers.
 	class UnaryNumberExpression : public UnaryExpression {
 	public:

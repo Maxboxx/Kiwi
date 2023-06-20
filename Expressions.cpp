@@ -110,6 +110,46 @@ void AllocExpression::BuildString(StringBuilder& builder) {
 	}
 }
 
+OffsetExpression::OffsetExpression(Ptr<Variable> var, Type type, Ptr<Value> offset) {
+	this->var = var;
+	this->offset = offset;
+	this->type = type;
+}
+
+OffsetExpression::OffsetExpression(Ptr<Variable> var, Type type, Type offsetType, Ptr<Value> offset) {
+	this->var = var;
+	this->offset = offset;
+	this->type = type;
+	this->offsetType = offsetType;
+}
+
+Type OffsetExpression::GetType(Interpreter::InterpreterData& data) const {
+	return type;
+}
+
+Interpreter::Data OffsetExpression::Evaluate(Interpreter::InterpreterData& data) {
+	Interpreter::DataPtr ptr = var->EvaluateRef(data);
+
+	UInt offsetSize = offsetType ? Type::SizeOf(*offsetType, data.program) : 1;
+	ptr += offsetSize * offset->Evaluate(data).GetNumber(Type::SizeOf(offset->GetType(data), data.program));
+
+	Interpreter::Data d = Interpreter::Data(ptr, Type::SizeOf(var->GetType(data), data.program));
+	return d;
+}
+
+void OffsetExpression::BuildString(StringBuilder& builder) {
+	var->BuildString(builder);
+	builder += '[';
+
+	if (offsetType) {
+		builder += (*offsetType).ToKiwi();
+		builder += ' ';
+	}
+
+	offset->BuildString(builder);
+	builder += ']';
+}
+
 Type UnaryNumberExpression::GetType(Interpreter::InterpreterData& data) const {
 	return value->GetType(data);
 }
