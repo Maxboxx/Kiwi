@@ -16,7 +16,7 @@ namespace Kiwi {
 	class KiwiProgram;
 
 	namespace Interpreter {
-		using Byte    = unsigned char;
+		using Byte    = Boxx::UByte;
 		using DataPtr = Byte*;
 
 		/// Interpreter data.
@@ -215,11 +215,15 @@ namespace Kiwi {
 
 			/// Frees up the given data.
 			void Free(Data data) {
-				values.Remove(data.Ptr());
+				Free(data.Ptr());
 			}
 
 			/// Frees up the value at the given address.
 			void Free(DataPtr data) {
+				if (!IsAllocated(data)) {
+					throw KiwiInterpretError("Attempt to free memory that is not allocated");
+				}
+
 				values.Remove(data);
 			}
 

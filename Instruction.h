@@ -199,6 +199,18 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	/// Instruction for freeing up memory.
+	class FreeInstruction : public Instruction {
+	public:
+		/// The condition
+		Ptr<Value> value;
+
+		FreeInstruction(Ptr<Value> value);
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// Base for instructions used for debugging.
 	class DebugInstruction : public Instruction {
 	public:

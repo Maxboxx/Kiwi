@@ -93,7 +93,8 @@ Interpreter::Data AllocExpression::Evaluate(Interpreter::InterpreterData& data) 
 		size = Type::SizeOf(Type(*type), data.program);
 	}
 
-	Interpreter::DataPtr ptr = data.heap->Alloc(size).Ptr();
+	Interpreter::Data allocData = data.heap->Alloc(size);
+	Interpreter::DataPtr ptr = allocData.Ptr();
 	Interpreter::Data value  = Interpreter::Data(KiwiProgram::ptrSize);
 	value.Set(ptr);
 	return value;

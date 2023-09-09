@@ -248,6 +248,20 @@ void IfInstruction::BuildString(Boxx::StringBuilder& builder) {
 	}
 }
 
+FreeInstruction::FreeInstruction(Ptr<Value> value) {
+	this->value = value;
+}
+
+void FreeInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Interpreter::Data value = this->value->Evaluate(data);
+	data.heap->Free(value.Get<Interpreter::DataPtr>());
+}
+
+void FreeInstruction::BuildString(Boxx::StringBuilder& builder) {
+	builder += "free ";
+	value->BuildString(builder);
+}
+
 void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Interpreter::Data value = this->value->Evaluate(data);
 	Interpreter::DataPtr ptr = value.Ptr();
