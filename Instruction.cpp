@@ -115,7 +115,8 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 			Interpreter::Data::Set(struct_, value);
 		}
 		else {
-			data.frame->SetVarValue(var->name, value);
+			Interpreter::Data val = Interpreter::Data(value, Type::SizeOf(data.frame->GetVarType(var->name), data.program));
+			data.frame->SetVarValue(var->name, val);
 		}
 	}
 }

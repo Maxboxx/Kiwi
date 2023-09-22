@@ -7,6 +7,7 @@
 #include "../Boxx/Boxx/Map.h"
 #include "../Boxx/Boxx/Stack.h"
 #include "../Boxx/Boxx/Error.h"
+#include "../Boxx/Boxx/Math.h"
 
 #include "../Structs.h"
 
@@ -35,6 +36,17 @@ namespace Kiwi {
 			Data(DataPtr ptr, Boxx::UInt size) {
 				data = Boxx::Array<Byte>(size);
 				std::memcpy((DataPtr)data, ptr, size * sizeof(Byte));
+			}
+
+			/// Create data from the specified data.
+			Data(const Data& data, Boxx::UInt size) {
+				this->data = Boxx::Array<Byte>(size);
+
+				for (Boxx::UInt i = data.Size(); i < size; i++) {
+					this->data[i] = 0;
+				}
+
+				std::memcpy((DataPtr)this->data, data.Ptr(), Boxx::Math::Min(size, data.Size()) * sizeof(Byte));
 			}
 
 			~Data() {
