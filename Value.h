@@ -156,4 +156,31 @@ namespace Kiwi {
 			builder += Boxx::String::ToString(value);
 		}
 	};
+
+	/// A Kiwi string.
+	class StringValue : public Value {
+	public:
+		/// The string value.
+		Boxx::String value;
+
+		StringValue(const Boxx::String& value) {
+			this->value = value;
+		}
+
+		virtual Ptr<Value> CopyValue() const override {
+			return new StringValue(value);
+		}
+
+		virtual Type GetType(Interpreter::InterpreterData& data) const override {
+			return Type(1, "u8");
+		}
+
+		virtual Interpreter::Data Evaluate(Interpreter::InterpreterData& data) override;
+
+		virtual void BuildString(Boxx::StringBuilder& builder) override {
+			builder += '"';
+			builder += value.Escape();
+			builder += '"';
+		}
+	};
 }

@@ -72,3 +72,12 @@ void RefValue::BuildString(StringBuilder& builder) {
 Interpreter::Data Integer::Evaluate(Interpreter::InterpreterData& data) {
 	return Interpreter::Data::Number(Type::SizeOf(type, data.program), value);
 }
+
+Interpreter::Data Kiwi::StringValue::Evaluate(Interpreter::InterpreterData& data) {
+	Interpreter::Data str = data.heap->Alloc(value.Length());
+	std::memcpy(str.Ptr(), (const char*)value, value.Length());
+
+	Interpreter::Data strPtr = Interpreter::Data(KiwiProgram::ptrSize);
+	strPtr.Set(str.Ptr());
+	return strPtr;
+}
