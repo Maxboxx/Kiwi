@@ -192,6 +192,26 @@ void OffsetAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 	expression->BuildString(builder);
 }
 
+void CopyInstruction::Interpret(Interpreter::InterpreterData& data) {
+	Interpreter::Data dstData  = dst->Evaluate(data);
+	Interpreter::Data srcData  = src->Evaluate(data);
+	Interpreter::Data sizeData = size->Evaluate(data);
+
+	Interpreter::DataPtr dstPtr = dstData.Get<Interpreter::DataPtr>();
+	Interpreter::DataPtr srcPtr = srcData.Get<Interpreter::DataPtr>();
+
+	std::memcpy(dstPtr, srcPtr, sizeData.GetNumber(sizeData.Size()));
+}
+
+void CopyInstruction::BuildString(Boxx::StringBuilder& builder) {
+	builder += "copy ";
+	dst->BuildString(builder);
+	builder += ", ";
+	src->BuildString(builder);
+	builder += ", ";
+	size->BuildString(builder);
+}
+
 void CallInstruction::Interpret(Interpreter::InterpreterData& data) {
 	call->Evaluate(data);
 }

@@ -93,6 +93,11 @@ Interpreter::Data AllocExpression::Evaluate(Interpreter::InterpreterData& data) 
 		size = Type::SizeOf(Type(*type), data.program);
 	}
 
+	if (var) {
+		Interpreter::Data varData = var->Evaluate(data);
+		size = varData.GetNumber(varData.Size());
+	}
+
 	Interpreter::Data allocData = data.heap->Alloc(size);
 	Interpreter::DataPtr ptr = allocData.Ptr();
 	Interpreter::Data value  = Interpreter::Data(KiwiProgram::ptrSize);
@@ -105,6 +110,9 @@ void AllocExpression::BuildString(StringBuilder& builder) {
 
 	if (type) {
 		builder += type->ToKiwi();
+	}
+	else if (var) {
+		var->BuildString(builder);
 	}
 	else {
 		builder += String::ToString(size);

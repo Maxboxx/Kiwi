@@ -72,6 +72,7 @@ namespace Kiwi {
 	public:
 		Boxx::UInt size;
 		Boxx::Optional<Type> type;
+		Ptr<Variable> var;
 
 		AllocExpression(Boxx::UInt size) {
 			this->size = size;
@@ -79,6 +80,10 @@ namespace Kiwi {
 
 		AllocExpression(Type type) {
 			this->type = type;
+		}
+
+		AllocExpression(Ptr<Variable> var) {
+			this->var = var;
 		}
 
 		virtual Type GetType(Interpreter::InterpreterData& data) const override;

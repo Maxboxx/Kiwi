@@ -134,6 +134,21 @@ namespace Kiwi {
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};
 
+	/// A copy instruction.
+	class CopyInstruction : public Instruction {
+	public:
+		Ptr<Value> dst, src, size;
+
+		CopyInstruction(Ptr<Value> dst, Ptr<Value> src, Ptr<Value> size) {
+			this->dst  = dst;
+			this->src  = src;
+			this->size = size;
+		}
+
+		virtual void Interpret(Interpreter::InterpreterData& data) override;
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
 	/// A call instruction.
 	class CallInstruction : public Instruction {
 	public:
