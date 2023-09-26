@@ -238,6 +238,9 @@ namespace Kiwi {
 		/// The value to print.
 		Ptr<Value> value;
 
+		/// The print type.
+		Boxx::Optional<Boxx::String> type;
+
 		DebugPrintInstruction(Ptr<Value> value) {
 			this->value = value;
 		}

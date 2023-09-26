@@ -285,6 +285,32 @@ void FreeInstruction::BuildString(Boxx::StringBuilder& builder) {
 
 void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Interpreter::Data value = this->value->Evaluate(data);
+
+	if (type == "str") {
+		Interpreter::DataPtr ptr = value.Get<Interpreter::DataPtr>();
+
+		if (data.heap->IsAllocated(ptr)) {
+			UInt size = data.heap->GetSize(ptr);
+			
+			char* str = new char[size + 1];
+			std::memcpy(str, ptr, size);
+			str[size] = '\0';
+
+			Console::Print(str);
+
+			delete[] str;
+		}
+		else {
+			Console::Print(ptr);
+		}
+
+		return;
+	}
+	else if (type == "chr") {
+		Console::Print(value.Get<char>());
+		return;
+	}
+
 	Interpreter::DataPtr ptr = value.Ptr();
 
 	Type type = this->value->GetType(data);
@@ -311,6 +337,11 @@ void DebugPrintInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 void DebugPrintInstruction::BuildString(StringBuilder& builder) {
 	builder += "_print ";
+
+	if (type) {
+		builder += *type;
+		builder += " ";
+	}
 
 	if (value) {
 		value->BuildString(builder);
