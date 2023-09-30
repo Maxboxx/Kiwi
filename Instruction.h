@@ -115,15 +115,22 @@ namespace Kiwi {
 		Ptr<Expression> expression;
 
 		Boxx::Optional<Type> type;
-		Boxx::UInt offset;
+		Ptr<Value> offset;
 
 		OffsetAssignInstruction(const Ptr<Variable> var, Ptr<Expression> expression, Boxx::UInt offset) {
 			this->var = var;
 			this->expression = expression;
-			this->offset = offset;
+			this->offset = new Kiwi::Integer(Type("u32"), offset);
 		}
 
 		OffsetAssignInstruction(const Ptr<Variable> var, Ptr<Expression> expression, Type type, Boxx::UInt offset) {
+			this->var = var;
+			this->expression = expression;
+			this->type = type;
+			this->offset = new Kiwi::Integer(Type("u32"), offset);
+		}
+
+		OffsetAssignInstruction(const Ptr<Variable> var, Ptr<Expression> expression, Type type, Ptr<Value> offset) {
 			this->var = var;
 			this->expression = expression;
 			this->type = type;

@@ -167,11 +167,14 @@ void MultiAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 void OffsetAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Interpreter::DataPtr ptr = var->EvaluateRef(data);
 
+	Interpreter::Data offsetData = offset->Evaluate(data);
+	UInt offsetNum = offsetData.GetNumber(Type::SizeOf(offset->GetType(data), data.program));
+
 	if (type) {
-		ptr += offset * Type::SizeOf(*type, data.program);
+		ptr += offsetNum * Type::SizeOf(*type, data.program);
 	}
 	else {
-		ptr += offset;
+		ptr += offsetNum;
 	}
 
 	Interpreter::Data::Set(ptr, expression->Evaluate(data));
@@ -186,7 +189,7 @@ void OffsetAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		builder += ' ';
 	}
 
-	builder += String::ToString(offset);
+	offset->BuildString(builder);
 	builder += "] = ";
 
 	expression->BuildString(builder);
