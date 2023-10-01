@@ -168,7 +168,7 @@ void OffsetAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 	Interpreter::DataPtr ptr = var->EvaluateRef(data);
 
 	Interpreter::Data offsetData = offset->Evaluate(data);
-	UInt offsetNum = offsetData.GetNumber(Type::SizeOf(offset->GetType(data), data.program));
+	UInt offsetNum = (UInt)offsetData.GetNumber(Type::SizeOf(offset->GetType(data), data.program));
 
 	if (type) {
 		ptr += offsetNum * Type::SizeOf(*type, data.program);

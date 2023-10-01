@@ -156,7 +156,7 @@ namespace KiwiOld {
 
 				case x86_64Syntax::ATnT: {
 					for (Boxx::Int i = instruction.arguments.Count() - 1; i >= 0; i--) {
-						if (i < instruction.arguments.Count() - 1) inst += ",";
+						if ((Boxx::UInt)i < instruction.arguments.Count() - 1) inst += ",";
 						inst += " " + ConvertArgument(instruction.arguments[i], instruction.sizes[i]);
 					}
 
@@ -284,10 +284,9 @@ namespace KiwiOld {
 					case 1: return "cl";
 				}
 			}
-			else {
-				logger.Error("undefined reserved register");
-				return "undefined reserved register";
-			}
+			
+			logger.Error("undefined reserved register");
+			return "undefined reserved register";
 		}
 
 		Boxx::String GetRegisterName(const Register& reg, const Boxx::UByte size) {
@@ -819,9 +818,9 @@ namespace KiwiOld {
 
 		struct BinaryInfo {
 			Boxx::String instName;
-			bool addBitNot;
-			bool isSwapable;
-			bool firstA;
+			bool addBitNot{};
+			bool isSwapable{};
+			bool firstA{};
 
 			~BinaryInfo() {};
 		};

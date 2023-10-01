@@ -97,7 +97,7 @@ namespace KiwiOld {
 		///H Members
 
 		///T Register type
-		RegisterType type;
+		RegisterType type{};
 
 		///T Register index
 		/// The index of the register
@@ -204,7 +204,7 @@ namespace KiwiOld {
 	struct MemoryLocation {
 		///T Offset
 		/// The stack offset from the memory pointer
-		Boxx::Int offset;
+		Boxx::Int offset{};
 
 		///T Memory Pointer
 		/// The register or memory label to use as the memory pointer
@@ -271,7 +271,7 @@ namespace KiwiOld {
 		///T Number
 		/// Used for immediate integers
 		/// Only used if <code>type</code> is <code>ArgumentType::Number</code>
-		Boxx::Long number;
+		Boxx::Long number{};
 
 		///T Label
 		/// Only used if <code>type</code> is <code>ArgumentType::Label</code> or <code>ArgumentType::Function</code>
@@ -378,7 +378,7 @@ namespace KiwiOld {
 
 		///T Type
 		/// The type of the instruction
-		InstructionType type;
+		InstructionType type{};
 
 		///T Arguments
 		/// A list of arguments for the instruction
@@ -1049,6 +1049,8 @@ namespace KiwiOld {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
+
+			return false;
 		}
 
 		static bool ValidateUnaryOp(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
@@ -1091,6 +1093,8 @@ namespace KiwiOld {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
+
+			return false;
 		}
 
 		static bool ValidateLabel(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {
@@ -1233,6 +1237,8 @@ namespace KiwiOld {
 				logger.Error(errInfo.ManyArgs());
 				return false;
 			}
+
+			return false;
 		}
 
 		static bool ValidatePushPop(const Instruction& instruction, Boxx::Logger& logger, const ErrorInfo& errInfo) {

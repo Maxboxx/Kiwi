@@ -31,19 +31,19 @@ Array<Interpreter::Data> CallExpression::EvaluateAll(Interpreter::InterpreterDat
 
 	Array<Interpreter::Data> argValues(args.Count());
 
-	for (int i = 0; i < args.Count(); i++) {
+	for (UInt i = 0; i < args.Count(); i++) {
 		argValues[i] = args[i]->Evaluate(data);
 	}
 
 	data.PushFrame();
 
-	for (int i = 0; i < args.Count(); i++) {
+	for (UInt i = 0; i < args.Count(); i++) {
 		Tuple<Type, String> arg = function->arguments[i];
 		data.frame->CreateVariable(arg.value2, arg.value1);
 		data.frame->SetVarValue(arg.value2, argValues[i]);
 	}
 
-	for (int i = 0; i < function->returnValues.Count(); i++) {
+	for (UInt i = 0; i < function->returnValues.Count(); i++) {
 		Tuple<Type, String> value = function->returnValues[i];
 		data.frame->CreateVariable(value.value2, value.value1);
 
@@ -72,7 +72,7 @@ void CallExpression::BuildString(StringBuilder& builder) {
 	builder += Name::ToKiwi(func);
 	builder += '(';
 
-	for (Int i = 0; i < args.Count(); i++) {
+	for (UInt i = 0; i < args.Count(); i++) {
 		if (i > 0) builder += ", ";
 		args[i]->BuildString(builder);
 	}
@@ -95,7 +95,7 @@ Interpreter::Data AllocExpression::Evaluate(Interpreter::InterpreterData& data) 
 
 	if (var) {
 		Interpreter::Data varData = var->Evaluate(data);
-		size = varData.GetNumber(varData.Size());
+		size = (UInt)varData.GetNumber(varData.Size());
 	}
 
 	Interpreter::Data allocData = data.heap->Alloc(size);

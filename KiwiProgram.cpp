@@ -154,7 +154,7 @@ void Function::BuildString(StringBuilder& builder) {
 	if (returnValues.Count() > 0) {
 		bool singleType = true;
 
-		for (Int i = 1; i < returnValues.Count(); i++) {
+		for (UInt i = 1; i < returnValues.Count(); i++) {
 			if (returnValues[0].value1 != returnValues[i].value1) {
 				singleType = false;
 				break;
@@ -164,14 +164,14 @@ void Function::BuildString(StringBuilder& builder) {
 		if (singleType) {
 			builder += returnValues[0].value1.ToKiwi();
 		}
-		else for (Int i = 0; i < returnValues.Count(); i++) {
+		else for (UInt i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
 			builder += returnValues[i].value1.ToKiwi();
 		}
 
 		builder += ": ";
 
-		for (Int i = 0; i < returnValues.Count(); i++) {
+		for (UInt i = 0; i < returnValues.Count(); i++) {
 			if (i > 0) builder += ", ";
 			builder += Name::ToKiwi(returnValues[i].value2);
 		}
@@ -182,7 +182,7 @@ void Function::BuildString(StringBuilder& builder) {
 	builder += Name::ToKiwi(name);
 	builder += '(';
 
-	for (Int i = 0; i < arguments.Count(); i++) {
+	for (UInt i = 0; i < arguments.Count(); i++) {
 		if (i > 0) builder += ", ";
 		builder += arguments[i].value1.ToKiwi();
 		builder += ": ";

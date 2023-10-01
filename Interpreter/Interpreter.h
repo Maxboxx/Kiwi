@@ -83,10 +83,10 @@ namespace Kiwi {
 				Data data = Data(size);
 				
 				switch (size) {
-					case 1:  data.Set<Boxx::Byte>(num);  break;
-					case 2:  data.Set<Boxx::Short>(num); break;
-					case 4:  data.Set<Boxx::Int>(num);   break;
-					default: data.Set<Boxx::Long>(num);  break;
+					case 1:  data.Set<Boxx::Byte>((Boxx::Byte)num);   break;
+					case 2:  data.Set<Boxx::Short>((Boxx::Short)num); break;
+					case 4:  data.Set<Boxx::Int>((Boxx::Int)num);     break;
+					default: data.Set<Boxx::Long>((Boxx::Long)num);   break;
 				}
 
 				return data;
