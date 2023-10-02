@@ -9,7 +9,7 @@ void KiwiProgram::AddCodeBlock(Ptr<CodeBlock> block) {
 }
 
 void KiwiProgram::AddStruct(Ptr<Struct> struct_) {
-	structs.Add(struct_->name, struct_);
+	structs.Set(struct_->name, struct_);
 }
 
 void KiwiProgram::AddFunction(Ptr<Function> function) {
