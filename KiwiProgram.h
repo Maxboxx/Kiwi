@@ -14,6 +14,7 @@ namespace Kiwi {
 	class CodeBlock;
 	class Function;
 	class Struct;
+	class StaticData;
 
 	/// The root node for kiwi programs.
 	class KiwiProgram : public Node {
@@ -27,6 +28,9 @@ namespace Kiwi {
 		/// All structs.
 		Boxx::Map<Boxx::String, Ptr<Struct>> structs;
 
+		/// All static data.
+		Boxx::Map<Boxx::String, Ptr<StaticData>> staticData;
+
 		/// All functions.
 		Boxx::Map<Boxx::String, Ptr<Function>> functions;
 
@@ -35,6 +39,9 @@ namespace Kiwi {
 
 		/// Adds a struct.
 		void AddStruct(Ptr<Struct> struct_);
+
+		/// Adds static data.
+		void AddStatic(Ptr<StaticData> data);
 
 		/// Adds a function.
 		void AddFunction(Ptr<Function> function);
@@ -130,7 +137,7 @@ namespace Kiwi {
 		}
 
 		/// Adds a variable to the struct.
-		void AddVariable(const Type& type, const Boxx::String& var);
+		void AddVariable(const Type& type, const Boxx::String& var, bool replace = false);
 
 		/// The byte size of the struct.
 		Boxx::UInt Size(Weak<KiwiProgram> program);
@@ -140,6 +147,28 @@ namespace Kiwi {
 
 		/// Gets the type of the specified variable.
 		Type VarType(Boxx::String var);
+
+		virtual void BuildString(Boxx::StringBuilder& builder) override;
+	};
+
+	/// Static kiwi data.
+	class StaticData : public Node {
+	public:
+		/// The data name.
+		Boxx::String name;
+
+		/// The data.
+		Boxx::List<Boxx::Tuple<Type, Boxx::String, Ptr<Value>>> data;
+
+		StaticData(const Boxx::String& name) {
+			this->name = name;
+		}
+
+		/// Adds a value to the data.
+		void AddValue(const Type& type, const Boxx::String& name, const Ptr<Value>& value, bool replace = false);
+
+		/// The byte size of the data.
+		Boxx::UInt Size(Weak<KiwiProgram> program);
 
 		virtual void BuildString(Boxx::StringBuilder& builder) override;
 	};

@@ -89,19 +89,42 @@ namespace Kiwi {
 		/// The variable to assign to.
 		Boxx::List<Ptr<Variable>> vars;
 
-		/// The assign expression.
+		/// The assign expressions.
 		Boxx::List<Ptr<Expression>> expressions;
+
+		/// Weak assign expressions.
+		Boxx::List<Weak<Expression>> weakExpressions;
 
 		MultiAssignInstruction(const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Ptr<Expression>>& expressions) {
 			this->types = Boxx::List<Boxx::Optional<Kiwi::Type>>();
 			this->vars  = vars;
 			this->expressions = expressions;
+
+			for (Weak<Expression> expr : expressions) {
+				this->weakExpressions.Add(expr);
+			}
 		}
 
 		MultiAssignInstruction(const Boxx::List<Boxx::Optional<Kiwi::Type>>& types, const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Ptr<Expression>>& expressions) {
 			this->types = types;
 			this->vars  = vars;
 			this->expressions = expressions;
+
+			for (Weak<Expression> expr : expressions) {
+				this->weakExpressions.Add(expr);
+			}
+		}
+
+		MultiAssignInstruction(const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Weak<Expression>>& expressions) {
+			this->types = Boxx::List<Boxx::Optional<Kiwi::Type>>();
+			this->vars  = vars;
+			this->weakExpressions = expressions;
+		}
+
+		MultiAssignInstruction(const Boxx::List<Boxx::Optional<Kiwi::Type>>& types, const Boxx::List<Ptr<Variable>>& vars, const Boxx::List<Weak<Expression>>& expressions) {
+			this->types = types;
+			this->vars  = vars;
+			this->weakExpressions = expressions;
 		}
 
 		virtual void Interpret(Interpreter::InterpreterData& data) override;

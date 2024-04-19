@@ -12,19 +12,53 @@ void KiwiProgram::AddStruct(Ptr<Struct> struct_) {
 	structs.Set(struct_->name, struct_);
 }
 
+void KiwiProgram::AddStatic(Ptr<StaticData> data) {
+	staticData.Set(data->name, data);
+}
+
 void KiwiProgram::AddFunction(Ptr<Function> function) {
 	functions.Add(function->name, function);
 }
 
 void KiwiProgram::Interpret(Interpreter::InterpreterData& data) {
+	for (const Pair<String, Ptr<Function>>& f : functions) {
+		UInt id = data.funcIdMap.Count();
+
+		data.funcIdMap.Add(f.key, id);
+		data.funcNameMap.Add(id, f.key);
+	}
+
+	for (const Pair<String, Ptr<StaticData>>& sd : staticData) {
+		Interpreter::Data d = data.heap->Alloc(sd.value->Size(data.program));
+		Interpreter::DataPtr ptr = d.Ptr();
+		
+		for (const Tuple<Type, String, Ptr<Value>>& value : sd.value->data) {
+			UInt size = Type::SizeOf(value.value1, data.program);
+
+			Interpreter::Data valData = value.value3->Evaluate(data);
+			std::memcpy(ptr, valData.Ptr(), size);
+			ptr += size;
+		}
+
+		data.staticData.Add(sd.key, d);
+	}
+
 	for (Weak<CodeBlock> block : blocks) {
 		data.PushFrame();
 		block->Interpret(data);
 		data.PopFrame();
 	}
+
+	for (const Pair<String, Interpreter::Data>& sd : data.staticData) {
+		data.heap->Free(sd.value);
+	}
 }
 
 void KiwiProgram::BuildString(StringBuilder& builder) {
+	for (const Pair<String, Ptr<StaticData>>& data : staticData) {
+		data.value->BuildString(builder);
+	}
+
 	for (Weak<CodeBlock> block : blocks) {
 		builder += "code:\n";
 		block->BuildString(builder);
@@ -194,7 +228,17 @@ void Function::BuildString(StringBuilder& builder) {
 	block->BuildString(builder);
 }
 
-void Struct::AddVariable(const Type& type, const String& var) {
+void Struct::AddVariable(const Type& type, const String& var, bool replace) {
+	for (Tuple<Type, String>& v : vars) {
+		if (v.value2 == var) {
+			if (replace) {
+				v.value1 = type;
+			}
+
+			return;
+		}
+	}
+
 	vars.Add(Tuple<>::Create(type, var));
 }
 
@@ -238,6 +282,49 @@ void Struct::BuildString(StringBuilder& builder) {
 		builder += var.value1.ToKiwi();
 		builder += ": ";
 		builder += Name::ToKiwi(var.value2);
+		builder += '\n';
+	}
+
+	builder += '\n';
+}
+
+void StaticData::AddValue(const Type& type, const String& name, const Ptr<Value>& value, bool replace) {
+	for (Tuple<Type, String, Ptr<Value>>& d : data) {
+		if (d.value2 == name) {
+			if (replace) {
+				d.value1 = type;
+				d.value3 = value;
+			}
+
+			return;
+		}
+	}
+
+	data.Add(Tuple<>::Create(type, name, value));
+}
+
+UInt StaticData::Size(Weak<KiwiProgram> program) {
+	UInt size = 0;
+
+	for (UInt i = 0; i < data.Count(); i++) {
+		size += Type::SizeOf(data[i].value1, program);
+	}
+
+	return size;
+}
+
+void StaticData::BuildString(StringBuilder& builder) {
+	builder += "static ";
+	builder += Name::ToKiwi(name);
+	builder += ":\n";
+
+	for (const Tuple<Type, String, Ptr<Value>>& value : data) {
+		builder += '\t';
+		builder += value.value1.ToKiwi();
+		builder += ": ";
+		builder += Name::ToKiwi(value.value2);
+		builder += " = ";
+		value.value3->BuildString(builder);
 		builder += '\n';
 	}
 

@@ -10,7 +10,22 @@ Interpreter::DataPtr Variable::EvaluateRef(Interpreter::InterpreterData& data) c
 }
 
 Interpreter::Data Variable::Evaluate(Interpreter::InterpreterData& data) {
-	return data.frame->GetVarValueCopy(name);
+	Interpreter::Data d;
+	UInt id;
+
+	if (data.staticData.Contains(name, d)) {
+		Interpreter::Data sd = Interpreter::Data(KiwiProgram::ptrSize);
+		sd.Set(d.Ptr());
+		return sd;
+	}
+	else if (data.funcIdMap.Contains(name, id)) {
+		return Interpreter::Data::Number(KiwiProgram::ptrSize, id);
+	}
+	else if (data.frame) {
+		return data.frame->GetVarValueCopy(name);
+	}
+
+	return d;
 }
 
 Type SubVariable::GetType(Interpreter::InterpreterData& data) const {

@@ -14,7 +14,7 @@ Ptr<MultiAssignInstruction> AssignInstruction::ToMultiAssign() {
 	List<Ptr<Variable>> vars;
 	vars.Add(var->Copy());
 
-	List<Ptr<Expression>> expressions;
+	List<Weak<Expression>> expressions;
 
 	if (expression) {
 		expressions.Add(expression);
@@ -33,9 +33,7 @@ Ptr<MultiAssignInstruction> AssignInstruction::ToMultiAssign() {
 }
 
 void AssignInstruction::FreeMultiAssign(Ptr<MultiAssignInstruction> assign) {
-	if (assign->expressions.Count() > 0) {
-		expression = assign->expressions[0];
-	}
+	
 }
 
 void AssignInstruction::Interpret(Interpreter::InterpreterData& data) {
@@ -65,12 +63,12 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 		Weak<Expression> expression = nullptr;
 
-		if (expressions.Count() > 0) {
-			if (i < expressions.Count()) {
-				expression = expressions[i];
+		if (weakExpressions.Count() > 0) {
+			if (i < weakExpressions.Count()) {
+				expression = weakExpressions[i];
 			}
 			else {
-				expression = expressions.Last();
+				expression = weakExpressions.Last();
 			}
 		}
 
@@ -90,8 +88,8 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 
 		Interpreter::Data value;
 		
-		if (i < expressions.Count()) {
-			if (i == expressions.Count() - 1 && expression.Is<CallExpression>()) {
+		if (i < weakExpressions.Count()) {
+			if (i == weakExpressions.Count() - 1 && expression.Is<CallExpression>()) {
 				extraValues = expression.As<CallExpression>()->EvaluateAll(data);
 
 				if (extraValues.Length() > 0) {
@@ -102,8 +100,8 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 				value = expression->Evaluate(data);
 			}
 		}
-		else if (extraValues.Length() > expressions.Count() - i) {
-			value = extraValues[expressions.Count() - i + 1];
+		else if (extraValues.Length() > weakExpressions.Count() - i) {
+			value = extraValues[weakExpressions.Count() - i + 1];
 		}
 
 		if (subVar) {

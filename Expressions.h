@@ -54,11 +54,18 @@ namespace Kiwi {
 		/// The function to call.
 		Boxx::String func;
 
+		/// The function ptr.
+		Ptr<Variable> funcPtr;
+
 		/// The function arguments.
 		Boxx::List<Ptr<Value>> args;
 
 		CallExpression(const Boxx::String& func) {
 			this->func = func;
+		}
+
+		CallExpression(const Ptr<Variable>& func) {
+			this->funcPtr = func;
 		}
 
 		virtual Type GetType(Interpreter::InterpreterData& data) const override;

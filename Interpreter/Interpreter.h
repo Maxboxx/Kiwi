@@ -220,7 +220,7 @@ namespace Kiwi {
 
 			/// Allocates data on the heap.
 			Data Alloc(Boxx::UInt size) {
-				Data data = Data(size);
+				Data data = Data(size == 0 ? 1 : size);
 				values.Add(data.Ptr(), data);
 				return data;
 			}
@@ -267,6 +267,15 @@ namespace Kiwi {
 
 			/// The heap.
 			Ptr<Heap> heap = new Heap();
+
+			/// The static data.
+			Boxx::Map<Boxx::String, Data> staticData;
+
+			/// A map of function data.
+			Boxx::Map<Boxx::String, Boxx::UInt> funcIdMap;
+
+			/// A map of function names.
+			Boxx::Map<Boxx::UInt, Boxx::String> funcNameMap;
 
 			/// Used by functions.
 			bool ret = false;

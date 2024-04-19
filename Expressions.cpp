@@ -27,7 +27,14 @@ Interpreter::Data CallExpression::Evaluate(Interpreter::InterpreterData& data) {
 }
 
 Array<Interpreter::Data> CallExpression::EvaluateAll(Interpreter::InterpreterData& data) {
-	Weak<Function> function = data.program->functions[func];
+	String funcName = func;
+
+	if (funcPtr) {
+		Interpreter::Data ptr = funcPtr->Evaluate(data);
+		funcName = data.funcNameMap[ptr.GetNumber(KiwiProgram::ptrSize)];
+	}
+
+	Weak<Function> function = data.program->functions[funcName];
 
 	Array<Interpreter::Data> argValues(args.Count());
 
@@ -69,7 +76,14 @@ Array<Interpreter::Data> CallExpression::EvaluateAll(Interpreter::InterpreterDat
 
 void CallExpression::BuildString(StringBuilder& builder) {
 	builder += "call ";
-	builder += Name::ToKiwi(func);
+
+	if (funcPtr) {
+		funcPtr->BuildString(builder);
+	}
+	else {
+		builder += Name::ToKiwi(func);
+	}
+
 	builder += '(';
 
 	for (UInt i = 0; i < args.Count(); i++) {
