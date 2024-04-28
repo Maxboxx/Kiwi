@@ -146,14 +146,14 @@ void MultiAssignInstruction::BuildString(Boxx::StringBuilder& builder) {
 		}
 	}
 
-	if (expressions.IsEmpty()) return;
+	if (weakExpressions.IsEmpty()) return;
 
 	builder += " = ";
 
-	for (UInt i = 0; i < expressions.Count(); i++) {
+	for (UInt i = 0; i < weakExpressions.Count(); i++) {
 		if (i > 0) builder += ", ";
 
-		if (Weak<Expression> expression = expressions[i]) {
+		if (Weak<Expression> expression = weakExpressions[i]) {
 			expression->BuildString(builder);
 		}
 		else {
