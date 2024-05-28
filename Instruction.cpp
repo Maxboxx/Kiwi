@@ -109,7 +109,7 @@ void MultiAssignInstruction::Interpret(Interpreter::InterpreterData& data) {
 			Interpreter::Data::Set(struct_, value);
 		}
 		else if (Weak<DerefVariable> deref = var.As<DerefVariable>()) {
-			Interpreter::DataPtr struct_ = subVar->EvaluateRef(data);
+			Interpreter::DataPtr struct_ = var->EvaluateRef(data);
 			Interpreter::Data::Set(struct_, value);
 		}
 		else {
